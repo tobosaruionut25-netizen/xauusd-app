@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XAUUSD — Semnale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#08080A; --panel:#141419; --panel2:#1B1B22; --line:#26262F;
+    --buy:#2979FF; --buy-glow:#2979FF55; --buy-dim:#2979FF14;
+    --sell:#FF3B47; --sell-glow:#FF3B4755; --sell-dim:#FF3B4714;
+    --wait:#FFC53D; --wait-glow:#FFC53D44; --wait-dim:#FFC53D12;
+    --gold:#E0B94A; --text:#F5F4F0; --dim:#6E6C77;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text); font-family:'IBM Plex Mono',monospace;
+    min-height:100vh; padding:14px 12px 40px; transition:background .4s;
+  }
+  body.BUY{background:radial-gradient(ellipse at 50% 22%, #2979FF14 0%, var(--bg) 55%);}
+  body.SELL{background:radial-gradient(ellipse at 50% 22%, #FF3B4714 0%, var(--bg) 55%);}
+  body.WAIT{background:radial-gradient(ellipse at 50% 22%, #FFC53D0e 0%, var(--bg) 55%);}
+  .wrap{max-width:540px;margin:0 auto;}
+
+  .top{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--dim);margin-bottom:10px;}
+  .top .l{display:flex;align-items:center;gap:6px;}
+  .top .l i{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:blink 2s infinite;}
+  .cd{font-weight:600;color:var(--gold);font-variant-numeric:tabular-nums;}
+
+  /* BIG SIGNAL */
+  .signal{
+    border-radius:18px;border:2px solid var(--line);background:var(--panel);
+    padding:22px 16px 20px;text-align:center;transition:all .35s;margin-bottom:11px;
+  }
+  .signal.BUY{border-color:var(--buy);background:var(--buy-dim);box-shadow:0 0 50px -18px var(--buy-glow);}
+  .signal.SELL{border-color:var(--sell);background:var(--sell-dim);box-shadow:0 0 50px -18px var(--sell-glow);}
+  .signal.WAIT{border-color:var(--wait);background:var(--wait-dim);box-shadow:0 0 50px -22px var(--wait-glow);}
+  .word{font-family:'Bebas Neue',sans-serif;font-size:clamp(62px,18vw,104px);line-height:.86;letter-spacing:.01em;}
+  .word.BUY{color:var(--buy);} .word.SELL{color:var(--sell);} .word.WAIT{color:var(--wait);}
+  .price{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,8vw,42px);margin-top:4px;letter-spacing:.02em;line-height:1;}
+  .pips{display:flex;gap:6px;justify-content:center;margin-top:15px;}
+  .pip{width:32px;height:7px;border-radius:4px;background:#2A2A33;transition:background .3s;}
+  .pip.on.BUY{background:var(--buy);} .pip.on.SELL{background:var(--sell);} .pip.on.WAIT{background:var(--wait);}
+  .pipcount{font-size:11.5px;color:var(--dim);margin-top:8px;letter-spacing:.04em;}
+  .hint{margin-top:11px;font-size:11px;color:var(--dim);line-height:1.5;}
+  .hint b.BUY{color:var(--buy);} .hint b.SELL{color:var(--sell);} .hint b.WAIT{color:var(--wait);}
+
+  /* SL / TP */
+  .levels{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:13px;}
+  .lv{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:11px 6px;text-align:center;}
+  .lv.entry{border-color:#3A3A45;}
+  .lv.sl{border-color:#FF3B4744;background:#FF3B470a;}
+  .lv.tp{border-color:#2ED47A44;background:#2ED47A0a;}
+  .lv .ll{font-size:9px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase;}
+  .lv .lvv{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;margin-top:4px;}
+  .lv.sl .lvv{color:var(--sell);} .lv.tp .lvv{color:#2ED47A;}
+  .lv .ld{font-size:9.5px;color:var(--dim);margin-top:2px;}
+  .rr{text-align:center;font-size:10.5px;color:var(--dim);margin:-6px 0 13px;}
+
+  /* Indicators */
+  .sec{font-size:10px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;
+    margin:14px 0 8px;display:flex;justify-content:space-between;}
+  .ind-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+  .ind{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 5px;text-align:center;}
+  .ind .il{font-size:9px;letter-spacing:.09em;color:var(--dim);text-transform:uppercase;}
+  .ind .iv{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;margin-top:3px;}
+
+  /* Filters */
+  .f-row{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:10px 12px;
+    margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;font-size:11.5px;}
+  .f-row.pass{border-color:#2A3A4E;}
+  .f-row .fs{font-size:9.5px;font-weight:600;padding:3px 8px;border-radius:5px;}
+  .f-row .fs.ok{color:var(--buy);background:var(--buy-dim);}
+  .f-row .fs.no{color:var(--dim);background:#ffffff08;}
+
+  .note{background:var(--panel);border:1px solid var(--line);border-left:2px solid var(--gold);
+    border-radius:8px;padding:10px 12px;margin-top:16px;font-size:10.5px;color:var(--dim);line-height:1.65;}
+  .note b{color:var(--text);}
+  .err{text-align:center;padding:30px 16px;color:var(--sell);font-size:12px;
+    border:1px dashed #FF3B4744;border-radius:12px;}
+
+  .hist-btn{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;margin-bottom:13px;text-decoration:none;color:var(--text);
+    font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;
+    letter-spacing:.03em;transition:all .25s;
+  }
+  .hist-btn:hover{border-color:var(--gold);background:#1B1B22;}
+  .hist-btn:active{transform:scale(.99);}
+  .hist-btn .hb-arrow{color:var(--gold);font-size:16px;}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:.25;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="l"><i></i>XAUUSD <span id="ivTxt"></span></div>
+    <div><span class="cd" id="cd">–</span> până la lumânare</div>
+  </div>
+  <div id="main"><div class="signal WAIT"><div class="word WAIT">...</div></div></div>
+  <a class="hist-btn" href="xauusd-istoric.html" target="_blank">
+    <span>Istoric XAUUSD</span>
+    <span class="hb-arrow">→</span>
+  </a>
+  <div class="note">
+    <b>Doar informativ.</b> SL/TP sunt calculate din ATR (volatilitatea măsurată), la raport risc/recompensă 1:2 — sugestii mecanice, nu valori optime. Mărimea reală a poziției depinde de capitalul și toleranța ta la risc.
+  </div>
+</div>
+
+<script>
+const API='https://xauusd-signals-p8qp.onrender.com';
+const $=id=>document.getElementById(id);
+let ivMin=5, syncT=null, lastCandle=null, confirmed=null;
+function esc(s){const d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
+function msNext(){const ms=ivMin*60*1000;return ms-(Date.now()%ms);}
+function tick(){const r=Math.ceil(msNext()/1000),m=Math.floor(r/60),s=r%60;
+  $('cd').textContent=`${m}:${String(s).padStart(2,'0')}`;}
+function schedule(){clearTimeout(syncT);syncT=setTimeout(async()=>{await load();schedule();},msNext()+4000);}
+
+async function load(){
+  try{
+    const res=await fetch(`${API}/api/signal`);
+    if(!res.ok){const e=await res.json();throw new Error(e.details||e.error);}
+    const d=await res.json();
+    const m=parseInt(d.interval); if(!isNaN(m)) ivMin=m;
+    $('ivTxt').textContent='· '+d.interval;
+    if(lastCandle && d.lastCandleTime!==lastCandle) confirmed=snap(d);
+    if(!confirmed) confirmed=snap(d);
+    lastCandle=d.lastCandleTime;
+    render(d);
+  }catch(err){
+    $('main').innerHTML=`<div class="err">${esc(err.message)}<br><br>Verifică serverul (port 3004).</div>`;
+  }
+}
+function snap(d){return{signal:d.signal,price:d.price,passed:d.passedCount,total:d.totalFilters,dir:d.direction,levels:d.levels};}
+
+function render(d){
+  const c=confirmed;
+  const cw=c.signal==='ASTEAPTA'?'WAIT':c.signal;
+  const lw=d.signal==='ASTEAPTA'?'WAIT':d.signal;
+  document.body.className=cw;
+
+  const pips=Array.from({length:c.total},(_,i)=>
+    `<div class="pip ${i<c.passed?'on':''} ${cw}"></div>`).join('');
+  const differs=lw!==cw;
+
+  const L=d.levels;
+  const levelsHtml = L ? `
+    <div class="levels">
+      <div class="lv entry"><div class="ll">Intrare</div><div class="lvv">${L.entry}</div><div class="ld">preț curent</div></div>
+      <div class="lv sl"><div class="ll">Stop Loss</div><div class="lvv">${L.stopLoss}</div><div class="ld">−${L.slPips}</div></div>
+      <div class="lv tp"><div class="ll">Take Profit</div><div class="lvv">${L.takeProfit}</div><div class="ld">+${L.tpPips}</div></div>
+    </div>
+    <div class="rr">risc/recompensă ${L.riskReward} · calculat din ATR ${d.indicators.atr}</div>
+  ` : '';
+
+  $('main').innerHTML=`
+    <div class="signal ${cw}">
+      <div class="word ${cw}">${cw==='WAIT'?'AȘTEAPTĂ':cw}</div>
+      <div class="price">${d.price.toFixed(2)}</div>
+      <div class="pips">${pips}</div>
+      <div class="pipcount">${c.passed}/${c.total} filtre confirmă</div>
+      ${differs?`<div class="hint">lumânarea în curs: <b class="${lw}">${lw==='WAIT'?'AȘTEAPTĂ':lw}</b> (${d.passedCount}/${d.totalFilters})</div>`:''}
+    </div>
+    ${levelsHtml}
+    <div class="sec">Indicatori</div>
+    <div class="ind-grid">
+      <div class="ind"><div class="il">EMA9</div><div class="iv">${d.indicators.ema9}</div></div>
+      <div class="ind"><div class="il">EMA21</div><div class="iv">${d.indicators.ema21}</div></div>
+      <div class="ind"><div class="il">EMA50</div><div class="iv">${d.indicators.ema50}</div></div>
+      <div class="ind"><div class="il">RSI</div><div class="iv">${d.indicators.rsi}</div></div>
+      <div class="ind"><div class="il">ATR</div><div class="iv">${d.indicators.atr}</div></div>
+      <div class="ind"><div class="il">ADX</div><div class="iv">${d.indicators.adx}</div></div>
+    </div>
+    <div class="sec">Filtre <span>${d.passedCount}/${d.totalFilters}</span></div>
+    ${d.filters.map(f=>`
+      <div class="f-row ${f.pass?'pass':''}"><span>${esc(f.name)}</span>
+      <span class="fs ${f.pass?'ok':'no'}">${f.pass?'OK':'—'}</span></div>`).join('')}
+  `;
+}
+
+setInterval(tick,1000); tick();
+load().then(schedule);
+</script>
+</body>
+</html>
