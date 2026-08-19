@@ -169,7 +169,7 @@ function computeMetrics(entries){
   const losses = closed.filter(e => e.outcome === 'SL');
 
   // R-multiple: castigul e 2R (TP la 3xATR, SL la 1.5xATR = raport 1:2), pierderea e -1R
-  const avgWinR = 2.0;
+  const avgWinR = 0.75;
   const avgLossR = -1.0;
   const winRate = wins.length / closed.length;
   const lossRate = losses.length / closed.length;
@@ -204,7 +204,7 @@ function computeMetrics(entries){
     maxLossStreak,
     maxWinStreak,
     currentLossStreak: curLossStreak,
-    breakeven: 33, // cu raport 1:2, ai nevoie de peste 33% reusita ca sa fii pe plus
+    breakeven: 57, // cu raport 1:2, ai nevoie de peste 33% reusita ca sa fii pe plus
     sequence: chrono.map(e => e.outcome === 'TP' ? 'w' : 'l')
   };
 }
