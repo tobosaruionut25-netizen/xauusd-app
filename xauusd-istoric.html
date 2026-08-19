@@ -168,7 +168,7 @@ function computeMetrics(entries){
   const wins = closed.filter(e => e.outcome === 'TP');
   const losses = closed.filter(e => e.outcome === 'SL');
 
-  // R-multiple: castigul e 2R (TP la 3xATR, SL la 1.5xATR = raport 1:2), pierderea e -1R
+  // R-multiple: castigul e 0.75R (TP la 1.5xATR, SL la 2xATR), pierderea e -1R
   const avgWinR = 0.75;
   const avgLossR = -1.0;
   const winRate = wins.length / closed.length;
@@ -246,7 +246,7 @@ function render(d){
       <div class="exp ${pos?'pos':'neg'}">
         <div class="el">Expectancy (per semnal)</div>
         <div class="ev">${expSign}${m.expectancy.toFixed(2)}R</div>
-        <div class="es">La ${m.winRate}% reușită și raport 1:2, ai nevoie de peste ${m.breakeven}% ca să fii pe plus</div>
+        <div class="es">La ${m.winRate}% reușită și raport 1:0.75, ai nevoie de peste ${m.breakeven}% ca să fii pe plus</div>
         <div class="verdict">${verdict}</div>
       </div>
 
