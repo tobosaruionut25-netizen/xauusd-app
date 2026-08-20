@@ -91,6 +91,13 @@
   .hist-btn:hover{border-color:var(--gold);background:#1B1B22;}
   .hist-btn:active{transform:scale(.99);}
   .hist-btn .hb-arrow{color:var(--gold);font-size:16px;}
+  .hist-btn .hb-tag{font-style:normal;font-size:9.5px;font-weight:600;letter-spacing:.06em;
+    padding:2px 7px;border-radius:4px;margin-left:8px;text-transform:uppercase;
+    color:var(--gold);background:#E0B94A18;}
+  .hist-btn.loose{margin-top:-4px;}
+  .hist-btn.loose .hb-tag.alt{color:#9BA3FF;background:#9BA3FF18;}
+  .hist-btn.loose:hover{border-color:#9BA3FF;}
+  .hist-btn.loose .hb-arrow{color:#9BA3FF;}
   @keyframes blink{0%,100%{opacity:1;}50%{opacity:.25;}}
 </style>
 </head>
@@ -102,7 +109,11 @@
   </div>
   <div id="main"><div class="signal WAIT"><div class="word WAIT">...</div></div></div>
   <a class="hist-btn" href="xauusd-istoric.html" target="_blank">
-    <span>Istoric XAUUSD</span>
+    <span>Istoric XAUUSD <em class="hb-tag">strict</em></span>
+    <span class="hb-arrow">→</span>
+  </a>
+  <a class="hist-btn loose" href="xauusd-istoric-loose.html" target="_blank">
+    <span>Istoric relaxat <em class="hb-tag alt">4 din 5</em></span>
     <span class="hb-arrow">→</span>
   </a>
   <div class="note">
