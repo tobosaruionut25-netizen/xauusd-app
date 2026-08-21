@@ -68,12 +68,26 @@
   .ind .iv{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;margin-top:3px;}
 
   /* Filters */
-  .f-row{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:10px 12px;
-    margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;font-size:11.5px;}
+  .f-row{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;
+    margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:10px;
+    font-size:11.5px;position:relative;overflow:hidden;transition:border-color .25s;}
   .f-row.pass{border-color:#2A3A4E;}
-  .f-row .fs{font-size:9.5px;font-weight:600;padding:3px 8px;border-radius:5px;}
+  .f-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:transparent;transition:background .25s;}
+  .f-row.pass::before{background:var(--buy);}
+  .f-left{display:flex;align-items:center;gap:10px;min-width:0;}
+  .f-num{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;
+    width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;background:#ffffff0a;color:var(--dim);transition:all .25s;}
+  .f-row.pass .f-num{background:var(--buy-dim);color:var(--buy);}
+  .f-txt{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .f-name{line-height:1.3;}
+  .f-val{font-size:9.5px;color:var(--dim);font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:.02em;}
+  .f-row.pass .f-val{color:#8FA0B8;}
+  .f-row .fs{font-size:9.5px;font-weight:600;padding:4px 9px;border-radius:5px;flex-shrink:0;}
   .f-row .fs.ok{color:var(--buy);background:var(--buy-dim);}
   .f-row .fs.no{color:var(--dim);background:#ffffff08;}
+  .f-hint{font-size:9.5px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase;
+    margin:11px 0 7px;padding-left:2px;}
 
   .note{background:var(--panel);border:1px solid var(--line);border-left:2px solid var(--gold);
     border-radius:8px;padding:10px 12px;margin-top:16px;font-size:10.5px;color:var(--dim);line-height:1.65;}
@@ -122,7 +136,7 @@
 </div>
 
 <script>
-const API='https://xauusd-signals-p8qp.onrender.com';
+const API='http://localhost:3004';
 const $=id=>document.getElementById(id);
 let ivMin=5, syncT=null, lastCandle=null, confirmed=null;
 function esc(s){const d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
@@ -147,6 +161,48 @@ async function load(){
   }
 }
 function snap(d){return{signal:d.signal,price:d.price,passed:d.passedCount,total:d.totalFilters,dir:d.direction,levels:d.levels};}
+
+// Ordinea filtrelor dupa importanta conceptuala, cu valoarea curenta afisata
+const FILTER_ORDER = ['no_strong_trend','adx','rsi_extreme','rsi','stretched','side_of_mean','near_e50','trend','cross','atr'];
+const FILTER_LABELS = {
+  no_strong_trend:'Piață fără trend dominant',
+  adx:'Trend cu forță',
+  rsi_extreme:'RSI în zonă extremă',
+  rsi:'RSI nu e extrem',
+  stretched:'Preț întins față de EMA21',
+  side_of_mean:'Preț de partea corectă a mediei',
+  near_e50:'Aproape de EMA50',
+  trend:'EMA50 — trend general',
+  cross:'EMA9/EMA21 — crossover clar',
+  atr:'Volatilitate suficientă'
+};
+
+function filterValue(id,d){
+  const I=d.indicators;
+  switch(id){
+    case 'no_strong_trend': case 'adx': return `ADX ${I.adx}`;
+    case 'rsi_extreme': case 'rsi': return `RSI ${I.rsi}`;
+    case 'atr': return `ATR ${I.atr}`;
+    case 'stretched': return `EMA21 ${I.ema21}`;
+    case 'side_of_mean': return `preț ${d.price.toFixed(2)} · EMA21 ${I.ema21}`;
+    case 'near_e50': case 'trend': return `EMA50 ${I.ema50}`;
+    case 'cross': return `EMA9 ${I.ema9} · EMA21 ${I.ema21}`;
+    default: return null;
+  }
+}
+
+function orderFilters(d){
+  const list=[...d.filters];
+  list.sort((a,b)=>{
+    const ia=FILTER_ORDER.indexOf(a.id), ib=FILTER_ORDER.indexOf(b.id);
+    return (ia<0?99:ia)-(ib<0?99:ib);
+  });
+  return list.map(f=>({
+    ...f,
+    label: FILTER_LABELS[f.id] || f.name,
+    val: filterValue(f.id,d)
+  }));
+}
 
 function render(d){
   const c=confirmed;
@@ -187,9 +243,18 @@ function render(d){
       <div class="ind"><div class="il">ADX</div><div class="iv">${d.indicators.adx}</div></div>
     </div>
     <div class="sec">Filtre <span>${d.passedCount}/${d.totalFilters}</span></div>
-    ${d.filters.map(f=>`
-      <div class="f-row ${f.pass?'pass':''}"><span>${esc(f.name)}</span>
-      <span class="fs ${f.pass?'ok':'no'}">${f.pass?'OK':'—'}</span></div>`).join('')}
+    <div class="f-hint">În ordinea importanței · toate trebuie confirmate</div>
+    ${orderFilters(d).map((f,i)=>`
+      <div class="f-row ${f.pass?'pass':''}">
+        <div class="f-left">
+          <span class="f-num">${i+1}</span>
+          <span class="f-txt">
+            <span class="f-name">${esc(f.label)}</span>
+            ${f.val!==null?`<span class="f-val">${f.val}</span>`:''}
+          </span>
+        </div>
+        <span class="fs ${f.pass?'ok':'no'}">${f.pass?'OK':'—'}</span>
+      </div>`).join('')}
   `;
 }
 
