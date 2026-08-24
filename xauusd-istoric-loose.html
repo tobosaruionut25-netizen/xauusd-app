@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XAUUSD — Istoric relaxat</title>
+<title>XAUUSD — Istoric invers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 <style>
@@ -33,7 +33,6 @@
     font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:12px;cursor:pointer;}
   .ctrl button.ghost{background:none;border:1px solid var(--line);color:var(--dim);}
 
-  /* Big win rate */
   .hero{background:var(--panel);border:2px solid var(--line);border-radius:16px;
     padding:20px 16px;text-align:center;margin-bottom:11px;}
   .hero.good{border-color:var(--win);background:var(--win-dim);}
@@ -67,8 +66,6 @@
   .e-out.SL{color:var(--loss);background:var(--loss-dim);}
   .e-out.OPEN{color:var(--wait);background:#FFC53D14;}
   .e-out.AMBIGUU{color:var(--dim);background:#ffffff08;}
-  .strict-badge{font-size:9px;font-weight:600;padding:3px 8px;border-radius:5px;letter-spacing:.05em;
-    color:var(--gold);background:#E0B94A18;border:1px solid #E0B94A44;margin-left:7px;}
   .st.strict .sv{color:var(--gold);}
   .e-lv{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;}
   .e-lv div{background:#0000004d;border-radius:7px;padding:7px 4px;text-align:center;}
@@ -86,7 +83,6 @@
     border-radius:8px;padding:11px 13px;margin-top:18px;font-size:10.5px;color:var(--dim);line-height:1.7;}
   .note b{color:var(--text);}
 
-  /* Expectancy hero */
   .exp{background:var(--panel);border:2px solid var(--line);border-radius:16px;
     padding:18px 16px;text-align:center;margin-bottom:11px;}
   .exp.pos{border-color:var(--win);background:var(--win-dim);}
@@ -98,7 +94,6 @@
   .exp .verdict{font-size:12px;font-weight:600;margin-top:9px;padding-top:9px;border-top:1px solid var(--line);}
   .exp.pos .verdict{color:var(--win);} .exp.neg .verdict{color:var(--loss);}
 
-  /* Secondary metrics */
   .m2{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:11px;}
   .m2 .mc{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px 10px;}
   .m2 .mc .ml{font-size:9px;letter-spacing:.09em;color:var(--dim);text-transform:uppercase;}
@@ -106,7 +101,6 @@
   .m2 .mc .md{font-size:9.5px;color:var(--dim);margin-top:3px;line-height:1.45;}
   .m2 .mc.good .mv{color:var(--win);} .m2 .mc.bad .mv{color:var(--loss);} .m2 .mc.warn .mv{color:var(--wait);}
 
-  /* Streak visual */
   .streak-bar{display:flex;gap:3px;margin-top:7px;flex-wrap:wrap;}
   .sq{width:9px;height:9px;border-radius:2px;}
   .sq.w{background:var(--win);} .sq.l{background:var(--loss);} .sq.n{background:#2A2A33;}
@@ -118,9 +112,9 @@
 <body>
 <div class="wrap">
   <div class="head">
-    <div class="tag"><i></i>Praguri relaxate · 4 din 5 filtre</div>
-    <h1>Istoric relaxat</h1>
-    <p>Varianta cu praguri mai permisive: RSI 35/65, distanță 0.7 ATR, ADX sub 55, și doar 4 din 5 filtre necesare. Semnalele marcate provin din varianta strictă.</p>
+    <div class="tag"><i></i>Momentum invers · în testare</div>
+    <h1>Istoric invers</h1>
+    <p>Direcție inversată față de mean reversion: RSI sub 30 înseamnă SELL, RSI peste 70 înseamnă BUY. Ipoteza: pe 5 minute, extremele marchează continuare, nu epuizare.</p>
   </div>
 
   <div class="ctrl">
@@ -131,9 +125,10 @@
   <div id="content"><div class="empty">Se încarcă...</div></div>
 
   <div class="note">
-    <b>Ce e diferit aici.</b> Aceleași date de piață, dar praguri mai permisive și doar 4 din 5 filtre necesare. Scopul: să vezi dacă relaxarea aduce mai multe semnale bune sau doar mai mult zgomot.<br><br>
-    <b>Marcajul „din strict".</b> Semnalele care ar fi trecut și pragurile stricte apar aici cu eticheta respectivă. Ele se regăsesc și în jurnalul strict — deci nu compara numărul total, ci expectancy-ul fiecărei variante.<br><br>
-    <b>Compară abia după 30+ rezultate în ambele.</b> O diferență mică de expectancy între cele două variante e zgomot, nu superioritate. </div>
+    <b>Ce testează pagina asta.</b> Aceleași condiții de intrare ca varianta strictă, dar direcția inversată. Backtestul pe patru ferestre de câte 17 zile a dat expectancy între −0.216R și +0.084R, cu sumă totală negativă.<br><br>
+    <b>Numărul cu care compari.</b> Dacă jurnalul live arată mult peste +0.1R, cel mai probabil e o fereastră norocoasă, nu o descoperire. Backtestul spune că adevărul e în jurul lui zero.<br><br>
+    <b>Compară abia după 30+ rezultate.</b> Sub atât, cifrele sunt zgomot. Și nu uita că nici backtestul, nici jurnalul nu includ slippage.
+  </div>
 </div>
 
 <script>
@@ -155,7 +150,7 @@ async function load(){
     const d=await res.json();
     render(d);
   }catch(err){
-    $('content').innerHTML=`<div class="err">${esc(err.message)}<br><br>Verifică dacă serverul rulează pe portul 3004 și dacă ai adăugat codul pentru jurnal în server.js.</div>`;
+    $('content').innerHTML=`<div class="err">${esc(err.message)}<br><br>Verifică dacă serverul de pe Render rulează.</div>`;
   }finally{
     $('refreshBtn').disabled=false;
   }
@@ -163,14 +158,13 @@ async function load(){
 
 function computeMetrics(entries){
   // Doar semnalele inchise clar (TP sau SL) intra in statistica.
-  // Cele ambigue si cele deschise sunt excluse - nu stim rezultatul real.
   const closed = entries.filter(e => e.outcome === 'TP' || e.outcome === 'SL');
   if(closed.length === 0) return null;
 
   const wins = closed.filter(e => e.outcome === 'TP');
   const losses = closed.filter(e => e.outcome === 'SL');
 
-  // R-multiple: castigul e 2R (TP la 3xATR, SL la 1.5xATR = raport 1:2), pierderea e -1R
+  // Geometria actuala: SL 2xATR, TP 1.5xATR -> castig 0.75R, pierdere -1R
   const avgWinR = 0.75;
   const avgLossR = -1.0;
   const winRate = wins.length / closed.length;
@@ -182,7 +176,6 @@ function computeMetrics(entries){
   const grossLoss = Math.abs(losses.length * avgLossR);
   const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : (grossProfit > 0 ? Infinity : 0);
 
-  // Serie maxima de pierderi consecutive (parcurgem cronologic, deci inversam)
   const chrono = [...closed].reverse();
   let maxLossStreak = 0, curLossStreak = 0;
   let maxWinStreak = 0, curWinStreak = 0;
@@ -206,7 +199,7 @@ function computeMetrics(entries){
     maxLossStreak,
     maxWinStreak,
     currentLossStreak: curLossStreak,
-    breakeven: 57, // cu raport 1:2, ai nevoie de peste 33% reusita ca sa fii pe plus
+    breakeven: 57,
     sequence: chrono.map(e => e.outcome === 'TP' ? 'w' : 'l')
   };
 }
@@ -214,7 +207,7 @@ function computeMetrics(entries){
 function render(d){
   const s=d.stats;
   if(s.total===0){
-    $('content').innerHTML=`<div class="empty">Niciun semnal înregistrat încă.<br><br>Jurnalul se populează automat pe măsură ce apar semnale BUY sau SELL. Lasă serverul să ruleze și revino mai târziu.</div>`;
+    $('content').innerHTML=`<div class="empty">Niciun semnal înregistrat încă.<br><br>Jurnalul se populează automat pe măsură ce apar semnale. Cu regula de o singură poziție deschisă, ritmul e de câteva semnale pe zi. Revino mai târziu.</div>`;
     return;
   }
 
@@ -230,12 +223,11 @@ function render(d){
     if(m.closed < 30){
       verdict = 'Prea puține date — cifra încă nu înseamnă nimic';
     } else if(pos){
-      verdict = 'Sistemul are avantaj matematic pe acest eșantion';
+      verdict = 'Are avantaj pe acest eșantion — compară cu backtestul';
     } else {
-      verdict = 'Sistemul pierde bani pe acest eșantion';
+      verdict = 'Pierde bani pe acest eșantion';
     }
 
-    // Vizualizare serie: ultimele 40 rezultate
     const seq = m.sequence.slice(-40);
     const seqHtml = seq.map(x => `<div class="sq ${x}"></div>`).join('');
 
@@ -248,7 +240,7 @@ function render(d){
       <div class="exp ${pos?'pos':'neg'}">
         <div class="el">Expectancy (per semnal)</div>
         <div class="ev">${expSign}${m.expectancy.toFixed(2)}R</div>
-        <div class="es">La ${m.winRate}% reușită și raport 1:2, ai nevoie de peste ${m.breakeven}% ca să fii pe plus</div>
+        <div class="es">Raport 1:0.75 — ai nevoie de peste ${m.breakeven}% reușită doar ca să fii pe zero, înainte de spread</div>
         <div class="verdict">${verdict}</div>
       </div>
 
@@ -273,7 +265,7 @@ function render(d){
   }
 
   const wr=s.winRate;
-  const heroClass = wr===null ? '' : (wr>=34 ? 'good' : 'bad');
+  const heroClass = wr===null ? '' : (wr>=57 ? 'good' : 'bad');
 
   $('content').innerHTML=`
     ${metricsHtml}
@@ -281,21 +273,21 @@ function render(d){
     <div class="hero ${heroClass}">
       <div class="hl">Rată de reușită</div>
       <div class="hv">${wr===null?'—':wr+'%'}</div>
-      <div class="hs">${s.closed} semnale închise</div>
+      <div class="hs">${s.closed} semnale închise · prag de rentabilitate 57%</div>
     </div>
 
     <div class="stats">
       <div class="st tp"><div class="sl">TP</div><div class="sv">${s.tp}</div></div>
       <div class="st sl-box"><div class="sl">SL</div><div class="sv">${s.sl}</div></div>
       <div class="st open"><div class="sl">Deschise</div><div class="sv">${s.open}</div></div>
-      <div class="st strict"><div class="sl">Din strict</div><div class="sv">${s.fromStrictCount||0}</div></div>
+      <div class="st amb"><div class="sl">Ambigue</div><div class="sv">${s.ambiguous||0}</div></div>
     </div>
 
     <div class="sec">Semnale <span>${s.total}</span></div>
     ${d.entries.map(e=>`
       <div class="entry ${e.outcome}">
         <div class="e-top">
-          <span><span class="e-dir ${e.signal}">${e.signal}</span>${e.fromStrict?'<span class="strict-badge">din strict</span>':''}</span>
+          <span class="e-dir ${e.signal}">${e.signal}</span>
           <span class="e-out ${e.outcome}">${e.outcome==='OPEN'?'în desfășurare':e.outcome}</span>
         </div>
         <div class="e-lv">
