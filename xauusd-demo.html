@@ -2,334 +2,290 @@
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XAUUSD — Demo Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#08080A">
+<title>XAUUSD — Demo Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#08080A;--panel:#141419;--panel2:#1B1B22;--line:#26262F;
+  --bg:#08080A;--panel:#121217;--panel2:#18181F;--line:#292933;
+  --text:#F5F4F0;--dim:#777582;--gold:#E0B94A;
   --buy:#2979FF;--sell:#FF3B47;--win:#2ED47A;--wait:#FFC53D;
-  --gold:#E0B94A;--text:#F5F4F0;--dim:#777582;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  background:radial-gradient(ellipse at 50% 0%,#17171e 0%,var(--bg) 55%);
-  color:var(--text);font-family:'IBM Plex Mono',monospace;min-height:100vh;
-  padding:16px 12px 42px
-}
-.wrap{max-width:760px;margin:0 auto}
-.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
-.kicker{font-size:10px;letter-spacing:.16em;color:var(--gold);text-transform:uppercase}
-h1{font-family:'Bebas Neue',sans-serif;font-size:38px;line-height:1;margin-top:4px}
-.sub{font-size:11px;color:var(--dim);margin-top:5px;line-height:1.5}
-.back{font-size:11px;color:var(--gold);text-decoration:none;border:1px solid #E0B94A44;padding:8px 10px;border-radius:8px;white-space:nowrap}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:10px}
-.cfg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(ellipse at 50% -10%,#1c1c25 0%,var(--bg) 48%);color:var(--text);font-family:'IBM Plex Mono',monospace;min-height:100vh;padding:16px 12px 50px}
+.wrap{max-width:900px;margin:0 auto}
+.topbar{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px}
+.kicker{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font-family:'Bebas Neue',sans-serif;font-size:42px;line-height:.95;margin:4px 0 0}
+.sub{color:var(--dim);font-size:11px;line-height:1.55;margin-top:6px}
+.actions-top{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.a-btn{display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--text);font-size:10px;border:1px solid var(--line);background:var(--panel);padding:9px 10px;border-radius:9px}
+.a-btn.gold{border-color:#E0B94A55;color:var(--gold)}
+.status{display:flex;gap:8px;align-items:center;margin:4px 0 14px;color:var(--dim);font-size:10px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}.dot.ok{background:var(--win);box-shadow:0 0 10px #2ED47A66}.dot.bad{background:var(--sell)}
+.panel{background:linear-gradient(180deg,#15151b,#111116);border:1px solid var(--line);border-radius:15px;padding:13px;margin-bottom:10px}
+.config{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .field label{display:block;font-size:8.5px;letter-spacing:.08em;color:var(--dim);text-transform:uppercase;margin-bottom:5px}
-.field input{width:100%;background:#0d0d11;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:10px 9px;font-family:inherit;font-size:12px}
-.actions{display:flex;gap:8px;margin-top:10px}
-button{border:0;border-radius:8px;padding:9px 12px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer}
-.primary{background:var(--gold);color:#0d0b05}
-.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
-.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.field input,.field select{width:100%;background:#0b0b0f;border:1px solid var(--line);color:var(--text);border-radius:9px;padding:10px 9px;font:500 12px 'IBM Plex Mono',monospace}
+.row-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+button{border:0;border-radius:9px;padding:9px 12px;font:600 11px 'IBM Plex Mono',monospace;cursor:pointer}
+.primary{background:var(--gold);color:#0e0c05}.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
+.live{display:grid;grid-template-columns:1.15fr .85fr;gap:10px;margin-bottom:10px}
+.live-card{background:linear-gradient(145deg,#17171f,#101015);border:1px solid #343440;border-radius:16px;padding:16px}
+.live-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.live-price{font-family:'Bebas Neue',sans-serif;font-size:54px;line-height:.9;margin-top:7px}
+.signal-pill{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;padding:6px 10px;border-radius:8px;background:#ffffff08}
+.signal-pill.BUY{color:var(--buy);background:#2979FF16}.signal-pill.SELL{color:var(--sell);background:#FF3B4716}.signal-pill.WAIT,.signal-pill.ASTEAPTA{color:var(--wait);background:#FFC53D14}
+.muted{color:var(--dim);font-size:10px}
+.balance-box{display:flex;flex-direction:column;justify-content:center;min-height:150px}
+.balance-label{font-size:9px;letter-spacing:.11em;color:var(--dim);text-transform:uppercase}
+.balance-value{font-family:'Bebas Neue',sans-serif;font-size:58px;line-height:.9;margin-top:6px}
+.balance-change{font-size:12px;margin-top:9px}.pos{color:var(--win)}.neg{color:var(--sell)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 10px}
-.card .l{font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
-.card .v{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;margin-top:4px}
-.card .d{font-size:9px;color:var(--dim);margin-top:3px;line-height:1.4}
+.card .l{font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.card .v{font:700 21px 'Space Grotesk',sans-serif;margin-top:4px}
+.card .d{font-size:9px;color:var(--dim);line-height:1.45;margin-top:3px}
 .good .v{color:var(--win)}.bad .v{color:var(--sell)}.gold .v{color:var(--gold)}
-.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:10px;margin-bottom:10px}
-.balance{background:linear-gradient(145deg,#17171d,#111116);border:1px solid #34343e;border-radius:15px;padding:16px}
-.balance .l{font-size:9px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
-.balance .v{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:.95;margin-top:5px}
-.balance .p{font-size:12px;margin-top:7px}
-.balance .p.pos{color:var(--win)}.balance .p.neg{color:var(--sell)}
-.summary{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.mini{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
-.mini .l{font-size:8px;letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
-.mini .v{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;margin-top:4px}
-.sec{font-size:10px;letter-spacing:.13em;color:var(--dim);text-transform:uppercase;margin:16px 0 8px;display:flex;justify-content:space-between;gap:10px}
-.chart-wrap{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
-.chart-wrap svg{width:100%;height:220px;display:block;overflow:visible}
-.axis{font-size:9px;fill:#777582;font-family:'IBM Plex Mono',monospace}
-.split{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sec{font-size:10px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase;display:flex;justify-content:space-between;gap:10px;margin:16px 0 8px}
+.chart{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:12px}
+.chart svg{width:100%;height:230px;display:block}.axis{font:9px 'IBM Plex Mono',monospace;fill:#777582}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .tbl{width:100%;border-collapse:collapse;font-size:10px}
-.tbl th,.tbl td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right}
+.tbl th,.tbl td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
 .tbl th:first-child,.tbl td:first-child{text-align:left}
-.tbl th{color:var(--dim);font-weight:500;font-size:8.5px;text-transform:uppercase;letter-spacing:.07em}
+.tbl th{font-size:8px;color:var(--dim);letter-spacing:.07em;text-transform:uppercase;font-weight:500}
 .tag{display:inline-block;padding:3px 6px;border-radius:5px;font-size:9px;font-weight:600}
-.tag.BUY{background:#2979FF16;color:var(--buy)}.tag.SELL{background:#FF3B4716;color:var(--sell)}
-.tag.TP{background:#2ED47A16;color:var(--win)}.tag.SL{background:#FF3B4716;color:var(--sell)}
-.empty,.err{text-align:center;padding:34px 16px;border:1px dashed var(--line);border-radius:12px;color:var(--dim);font-size:12px;line-height:1.6}
-.err{color:var(--sell);border-color:#FF3B4744}
-.note{font-size:10px;color:var(--dim);line-height:1.6;margin-top:12px;padding:11px 12px;border-left:2px solid var(--gold);background:var(--panel);border-radius:8px}
-@media(max-width:640px){
-  .cfg,.grid4{grid-template-columns:1fr 1fr}
-  .hero,.split{grid-template-columns:1fr}
-}
+.tag.BUY{color:var(--buy);background:#2979FF16}.tag.SELL{color:var(--sell);background:#FF3B4716}.tag.TP{color:var(--win);background:#2ED47A16}.tag.SL{color:var(--sell);background:#FF3B4716}.tag.OPEN{color:var(--wait);background:#FFC53D14}
+.meter{height:7px;background:#0b0b0f;border-radius:999px;overflow:hidden;margin-top:7px}.meter span{display:block;height:100%;background:var(--gold)}
+.small-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.empty,.err{text-align:center;padding:34px 16px;border:1px dashed var(--line);border-radius:13px;color:var(--dim);font-size:12px;line-height:1.6}.err{color:var(--sell);border-color:#FF3B4744}
+.note{background:var(--panel);border:1px solid var(--line);border-left:2px solid var(--gold);border-radius:10px;padding:11px 12px;margin-top:12px;color:var(--dim);font-size:10px;line-height:1.65}
+.note b{color:var(--text)}
+@media(max-width:720px){.config{grid-template-columns:1fr 1fr}.grid{grid-template-columns:1fr 1fr}.live,.two{grid-template-columns:1fr}.small-grid{grid-template-columns:1fr}.topbar{align-items:stretch}.actions-top{max-width:150px}.live-price{font-size:48px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="head">
+  <div class="topbar">
     <div>
-      <div class="kicker">Simulator virtual · XAUUSD</div>
-      <h1>Demo Dashboard</h1>
-      <div class="sub">Folosește istoricul real al semnalelor, dar calculează un sold complet virtual.</div>
+      <div class="kicker">XAUUSD · virtual strategy lab</div>
+      <h1>Demo Lab</h1>
+      <div class="sub">Piață reală, bani virtuali. Simulare pe jurnalul de semnale, fără ordine către broker.</div>
     </div>
-    <a class="back" href="index.html">← Semnale</a>
+    <div class="actions-top">
+      <a class="a-btn gold" href="index.html">← Semnale</a>
+      <a class="a-btn" href="xauusd-istoric.html">Istoric</a>
+    </div>
   </div>
+
+  <div class="status"><span class="dot" id="apiDot"></span><span id="apiText">Conectare la date...</span><span>·</span><span id="updated">—</span></div>
 
   <div class="panel">
-    <div class="cfg">
-      <div class="field">
-        <label>Sold inițial ($)</label>
-        <input id="startBalance" type="number" min="10" step="10" value="1000">
-      </div>
-      <div class="field">
-        <label>Risc / tranzacție (%)</label>
-        <input id="riskPct" type="number" min="0.1" max="10" step="0.1" value="1">
-      </div>
-      <div class="field">
-        <label>Spread simulat ($/oz)</label>
-        <input id="spread" type="number" min="0" step="0.01" value="0.30">
-      </div>
+    <div class="config">
+      <div class="field"><label>Sold inițial ($)</label><input id="startBalance" type="number" min="10" step="10" value="1000"></div>
+      <div class="field"><label>Risc / tranzacție (%)</label><input id="riskPct" type="number" min="0.1" max="10" step="0.1" value="1"></div>
+      <div class="field"><label>Spread estimat ($/oz)</label><input id="spread" type="number" min="0" step="0.01" value="0.30"></div>
+      <div class="field"><label>Filtru direcție</label><select id="dirFilter"><option value="ALL">Toate</option><option value="BUY">BUY</option><option value="SELL">SELL</option></select></div>
     </div>
-    <div class="actions">
+    <div class="row-actions">
       <button class="primary" id="applyBtn">Recalculează</button>
-      <button class="ghost" id="resetBtn">Valori implicite</button>
+      <button class="ghost" id="resetBtn">Reset setări</button>
     </div>
   </div>
 
-  <div id="content"><div class="empty">Se încarcă...</div></div>
+  <div id="content"><div class="empty">Se încarcă datele...</div></div>
 
-  <div class="note">
-    Soldul este doar o simulare locală în browser. Nu trimite ordine către broker și nu folosește bani reali.
-    Costul spread-ului este aproximat în raport cu distanța până la SL, iar tranzacțiile ambigue/deschise nu intră în P&amp;L.
-  </div>
+  <div class="note"><b>Important:</b> acesta este un simulator, nu un backtest tick-by-tick și nu reproduce exact execuția unui broker. Spread-ul este aproximat în raport cu distanța până la SL; slippage, comisioane, gap-uri și ordinea exactă a atingerii TP/SL în aceeași lumânare pot schimba rezultatul real.</div>
 </div>
 
 <script>
 const API='https://xauusd-signals-p8qp.onrender.com';
 const $=id=>document.getElementById(id);
-let journal=null;
+let journal=null, liveSignal=null;
+const defaults={startBalance:1000,riskPct:1,spread:0.30,dirFilter:'ALL'};
 
-const defaults={startBalance:1000,riskPct:1,spread:0.30};
 function loadCfg(){
-  const raw=localStorage.getItem('xauusd_demo_cfg');
   let c=defaults;
-  try{ if(raw) c={...defaults,...JSON.parse(raw)}; }catch(e){}
-  $('startBalance').value=c.startBalance;
-  $('riskPct').value=c.riskPct;
-  $('spread').value=c.spread;
+  try{const x=JSON.parse(localStorage.getItem('xauusd_demo_cfg')||'{}');c={...defaults,...x}}catch(e){}
+  Object.keys(defaults).forEach(k=>{if($(k))$(k).value=c[k]});
 }
-function getCfg(){
+function cfg(){
   return {
     startBalance:Math.max(10,Number($('startBalance').value)||1000),
     riskPct:Math.min(10,Math.max(.1,Number($('riskPct').value)||1)),
-    spread:Math.max(0,Number($('spread').value)||0)
+    spread:Math.max(0,Number($('spread').value)||0),
+    dirFilter:$('dirFilter').value
   };
 }
-function saveCfg(c){localStorage.setItem('xauusd_demo_cfg',JSON.stringify(c));}
-function money(v){return new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(v)+' $';}
-function pct(v){return (v>=0?'+':'')+v.toFixed(2)+'%';}
-function fmtTime(str){
-  if(!str)return '—';
-  const d=str.includes('T')?new Date(str):new Date(str.replace(' ','T')+'Z');
-  return d.toLocaleString('ro-RO',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-}
-function hourOf(str){
-  if(!str)return null;
-  const d=str.includes('T')?new Date(str):new Date(str.replace(' ','T')+'Z');
-  return d.getHours();
-}
-function sessionName(h){
+function saveCfg(c){localStorage.setItem('xauusd_demo_cfg',JSON.stringify(c))}
+const money=v=>new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(v)+' $';
+const pct=v=>(v>=0?'+':'')+v.toFixed(2)+'%';
+function dt(s){if(!s)return '—';const d=s.includes('T')?new Date(s):new Date(s.replace(' ','T')+'Z');return d}
+function fmt(s){const d=dt(s);return d==='—'?'—':d.toLocaleString('ro-RO',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
+function utcHour(s){const d=dt(s);return d==='—'?null:d.getUTCHours()}
+function session(h){
   if(h===null)return 'Necunoscut';
-  if(h<8)return 'Asia';
-  if(h<14)return 'Londra';
-  if(h<22)return 'New York';
-  return 'Târziu';
+  if(h>=0&&h<7)return 'Asia · 00–07 UTC';
+  if(h>=7&&h<13)return 'Londra · 07–13 UTC';
+  if(h>=13&&h<16)return 'Overlap · 13–16 UTC';
+  if(h>=16&&h<22)return 'New York · 16–22 UTC';
+  return 'Off-hours · 22–00 UTC';
 }
-function baseR(e){
-  const entry=Number(e.entry), sl=Number(e.sl), spread=getCfg().spread;
-  const slDist=Math.abs(entry-sl);
-  const spreadR=slDist>0?spread/slDist:0;
-  return {slDist,spreadR};
+function streaks(ts){
+  let maxW=0,maxL=0,cw=0,cl=0;
+  for(const t of ts){if(t.outcome==='TP'){cw++;cl=0;maxW=Math.max(maxW,cw)}else{cl++;cw=0;maxL=Math.max(maxL,cl)}}
+  return {maxW,maxL,currentW:cw,currentL:cl};
 }
-function simulate(entries,cfg){
-  const closed=entries
-    .filter(e=>e.outcome==='TP'||e.outcome==='SL')
-    .slice().reverse();
-
-  let bal=cfg.startBalance, peak=bal, maxDD=0;
-  let grossProfit=0,grossLoss=0,wins=0,losses=0;
-  const trades=[],equity=[bal];
-  const byDir={BUY:[],SELL:[]};
-  const bySession={};
-
+function simulate(entries,c){
+  let closed=entries.filter(e=>e.outcome==='TP'||e.outcome==='SL').slice().reverse();
+  if(c.dirFilter!=='ALL')closed=closed.filter(e=>e.signal===c.dirFilter);
+  let bal=c.startBalance,peak=bal,maxDD=0,gp=0,gl=0,wins=0,losses=0;
+  const trades=[],equity=[bal],ddCurve=[0],byDir={BUY:[],SELL:[]},bySession={};
   for(const e of closed){
-    const entry=Number(e.entry),sl=Number(e.sl);
-    const slDist=Math.abs(entry-sl);
-    const spreadR=slDist>0?cfg.spread/slDist:0;
-    const riskAmount=bal*(cfg.riskPct/100);
+    const entry=Number(e.entry),sl=Number(e.sl),dist=Math.abs(entry-sl);
+    const spreadR=dist>0?c.spread/dist:0;
     const grossR=e.outcome==='TP'?0.75:-1;
     const netR=grossR-spreadR;
-    const pnl=riskAmount*netR;
-    const before=bal;
-    bal+=pnl;
-    if(pnl>=0){grossProfit+=pnl;wins++;}else{grossLoss+=Math.abs(pnl);losses++;}
+    const risk=bal*c.riskPct/100;
+    const pnl=risk*netR;
+    const before=bal;bal+=pnl;
+    if(e.outcome==='TP'){wins++;gp+=Math.max(0,pnl)}else{losses++;gl+=Math.abs(Math.min(0,pnl))}
     peak=Math.max(peak,bal);
-    const dd=peak>0?(peak-bal)/peak*100:0;
-    maxDD=Math.max(maxDD,dd);
-    const h=hourOf(e.candleTime),session=sessionName(h);
-    const t={...e,before,after:bal,riskAmount,spreadR,netR,pnl,session};
-    trades.push(t);equity.push(bal);
+    const dd=peak>0?(peak-bal)/peak*100:0;maxDD=Math.max(maxDD,dd);
+    const ses=session(utcHour(e.candleTime));
+    const t={...e,before,after:bal,risk,pnl,netR,spreadR,session:ses};
+    trades.push(t);equity.push(bal);ddCurve.push(dd);
     if(byDir[e.signal])byDir[e.signal].push(t);
-    if(!bySession[session])bySession[session]=[];
-    bySession[session].push(t);
+    (bySession[ses]||(bySession[ses]=[])).push(t);
   }
-  const n=closed.length;
-  const winRate=n?wins/n*100:0;
-  const pf=grossLoss>0?grossProfit/grossLoss:(grossProfit>0?Infinity:0);
-  const expectancy=n?trades.reduce((a,t)=>a+t.netR,0)/n:0;
-  return {bal,profit:bal-cfg.startBalance,returnPct:(bal/cfg.startBalance-1)*100,maxDD,grossProfit,grossLoss,wins,losses,n,winRate,pf,expectancy,trades,equity,byDir,bySession};
+  const n=trades.length,wr=n?wins/n*100:0,pf=gl>0?gp/gl:(gp>0?Infinity:0),exp=n?trades.reduce((a,t)=>a+t.netR,0)/n:0;
+  return {bal,profit:bal-c.startBalance,ret:(bal/c.startBalance-1)*100,maxDD,gp,gl,wins,losses,n,wr,pf,exp,trades,equity,ddCurve,byDir,bySession,streak:streaks(trades)};
 }
-function statSet(arr){
-  const n=arr.length;
-  if(!n)return {n:0,wr:0,pnl:0,pf:0};
-  const wins=arr.filter(t=>t.pnl>=0),losses=arr.filter(t=>t.pnl<0);
-  const gp=wins.reduce((a,t)=>a+t.pnl,0),gl=Math.abs(losses.reduce((a,t)=>a+t.pnl,0));
-  return {n,wr:wins.length/n*100,pnl:arr.reduce((a,t)=>a+t.pnl,0),pf:gl>0?gp/gl:(gp>0?Infinity:0)};
+function setStats(arr){
+  const n=arr.length;if(!n)return {n:0,wr:0,pnl:0,pf:0,exp:0};
+  const w=arr.filter(t=>t.outcome==='TP'),l=arr.filter(t=>t.outcome==='SL');
+  const gp=w.reduce((a,t)=>a+Math.max(0,t.pnl),0),gl=Math.abs(l.reduce((a,t)=>a+Math.min(0,t.pnl),0));
+  return {n,wr:w.length/n*100,pnl:arr.reduce((a,t)=>a+t.pnl,0),pf:gl>0?gp/gl:(gp>0?Infinity:0),exp:arr.reduce((a,t)=>a+t.netR,0)/n};
 }
-function chartSvg(vals){
-  const w=700,h=220,pad=28;
-  if(vals.length<2)return '<div class="empty">Nu sunt suficiente tranzacții închise pentru grafic.</div>';
-  const min=Math.min(...vals),max=Math.max(...vals),span=Math.max(1,max-min);
-  const pts=vals.map((v,i)=>{
-    const x=pad+(i/(vals.length-1))*(w-pad*2);
-    const y=h-pad-((v-min)/span)*(h-pad*2);
-    return [x,y];
-  });
-  const poly=pts.map(p=>p.join(',')).join(' ');
-  const first=pts[0],last=pts[pts.length-1];
-  return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Curba soldului">
-    <line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#26262F"/>
-    <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h-pad}" stroke="#26262F"/>
+function chart(vals,dd){
+  if(vals.length<2)return '<div class="empty">Nu sunt încă suficiente tranzacții închise.</div>';
+  const w=820,h=230,p=30,min=Math.min(...vals),max=Math.max(...vals),span=Math.max(1,max-min);
+  const pts=vals.map((v,i)=>[p+i/(vals.length-1)*(w-p*2),h-p-(v-min)/span*(h-p*2)]);
+  const poly=pts.map(x=>x.join(',')).join(' ');
+  return `<svg viewBox="0 0 ${w} ${h}">
+    <defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E0B94A" stop-opacity=".20"/><stop offset="100%" stop-color="#E0B94A" stop-opacity="0"/></linearGradient></defs>
+    <line x1="${p}" y1="${h-p}" x2="${w-p}" y2="${h-p}" stroke="#292933"/>
+    <polygon points="${p},${h-p} ${poly} ${w-p},${h-p}" fill="url(#fill)"/>
     <polyline points="${poly}" fill="none" stroke="#E0B94A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="${first[0]}" cy="${first[1]}" r="3" fill="#777582"/>
-    <circle cx="${last[0]}" cy="${last[1]}" r="4" fill="#E0B94A"/>
-    <text x="${pad}" y="14" class="axis">${money(max)}</text>
-    <text x="${pad}" y="${h-5}" class="axis">${money(min)}</text>
-    <text x="${w-pad}" y="${h-5}" text-anchor="end" class="axis">${vals.length-1} tranzacții</text>
+    <text x="${p}" y="15" class="axis">${money(max)}</text>
+    <text x="${p}" y="${h-5}" class="axis">${money(min)}</text>
+    <text x="${w-p}" y="${h-5}" text-anchor="end" class="axis">${vals.length-1} trades · DD max ${Math.max(...dd).toFixed(2)}%</text>
   </svg>`;
+}
+function liveHtml(){
+  if(!liveSignal)return '<div class="live-card"><div class="muted">Snapshot live indisponibil momentan.</div></div>';
+  const sig=liveSignal.signal==='ASTEAPTA'?'WAIT':liveSignal.signal;
+  const lev=liveSignal.levels||{};
+  return `<div class="live-card">
+    <div class="live-head"><div><div class="kicker">Snapshot piață</div><div class="live-price">${Number(liveSignal.price).toFixed(2)}</div></div><div class="signal-pill ${sig}">${sig}</div></div>
+    <div class="muted" style="margin-top:9px">Filtre ${liveSignal.passedCount}/${liveSignal.totalFilters} · interval ${liveSignal.interval||'—'}</div>
+    <div class="small-grid" style="margin-top:10px">
+      <div class="card"><div class="l">Entry</div><div class="v" style="font-size:16px">${lev.entry??'—'}</div></div>
+      <div class="card bad"><div class="l">SL</div><div class="v" style="font-size:16px">${lev.stopLoss??'—'}</div></div>
+      <div class="card good"><div class="l">TP</div><div class="v" style="font-size:16px">${lev.takeProfit??'—'}</div></div>
+    </div>
+  </div>`;
 }
 function render(){
   if(!journal)return;
-  const cfg=getCfg();saveCfg(cfg);
-  const s=simulate(journal.entries,cfg);
-  if(!s.n){
-    $('content').innerHTML='<div class="empty">Nu există încă tranzacții TP/SL suficiente pentru simulare.</div>';
-    return;
-  }
-  const retClass=s.profit>=0?'pos':'neg';
-  const pfTxt=s.pf===Infinity?'∞':s.pf.toFixed(2);
-  const buy=statSet(s.byDir.BUY),sell=statSet(s.byDir.SELL);
-  const sessions=Object.entries(s.bySession).map(([name,arr])=>({name,...statSet(arr)}));
-  const latest=[...s.trades].reverse().slice(0,12);
-
+  const c=cfg();saveCfg(c);const s=simulate(journal.entries,c);
+  if(!s.n){$('content').innerHTML='<div class="empty">Nu există tranzacții TP/SL pentru filtrul selectat.</div>';return}
+  const buy=setStats(s.byDir.BUY),sell=setStats(s.byDir.SELL),sessions=Object.entries(s.bySession).map(([name,a])=>({name,...setStats(a)}));
+  const latest=[...s.trades].reverse().slice(0,15);
+  const totalAll=journal.entries.length,open=journal.entries.filter(e=>e.outcome==='OPEN').length,amb=journal.entries.filter(e=>e.outcome==='AMBIGUU').length;
+  const pf=s.pf===Infinity?'∞':s.pf.toFixed(2),changeClass=s.profit>=0?'pos':'neg';
   $('content').innerHTML=`
-    <div class="hero">
-      <div class="balance">
-        <div class="l">Sold demo actual</div>
-        <div class="v">${money(s.bal)}</div>
-        <div class="p ${retClass}">${s.profit>=0?'+':''}${money(s.profit)} · ${pct(s.returnPct)}</div>
-      </div>
-      <div class="summary">
-        <div class="mini"><div class="l">Tranzacții</div><div class="v">${s.n}</div></div>
-        <div class="mini"><div class="l">Win rate</div><div class="v">${s.winRate.toFixed(1)}%</div></div>
-        <div class="mini"><div class="l">Profit factor</div><div class="v">${pfTxt}</div></div>
-        <div class="mini"><div class="l">Max drawdown</div><div class="v">${s.maxDD.toFixed(2)}%</div></div>
+    <div class="live">
+      ${liveHtml()}
+      <div class="live-card balance-box">
+        <div class="balance-label">Sold demo</div>
+        <div class="balance-value">${money(s.bal)}</div>
+        <div class="balance-change ${changeClass}">${s.profit>=0?'+':''}${money(s.profit)} · ${pct(s.ret)}</div>
+        <div class="muted" style="margin-top:10px">Start ${money(c.startBalance)} · risc ${c.riskPct}% · spread ${c.spread.toFixed(2)} $</div>
       </div>
     </div>
 
-    <div class="grid4">
-      <div class="card ${s.expectancy>=0?'good':'bad'}"><div class="l">Expectancy net</div><div class="v">${s.expectancy>=0?'+':''}${s.expectancy.toFixed(3)}R</div><div class="d">include spreadul simulat</div></div>
-      <div class="card good"><div class="l">Profit brut</div><div class="v">${money(s.grossProfit)}</div><div class="d">${s.wins} TP</div></div>
-      <div class="card bad"><div class="l">Pierdere brută</div><div class="v">${money(s.grossLoss)}</div><div class="d">${s.losses} SL</div></div>
-      <div class="card gold"><div class="l">Risc curent</div><div class="v">${money(s.bal*(cfg.riskPct/100))}</div><div class="d">${cfg.riskPct}% din sold</div></div>
+    <div class="grid">
+      <div class="card ${s.exp>=0?'good':'bad'}"><div class="l">Expectancy net</div><div class="v">${s.exp>=0?'+':''}${s.exp.toFixed(3)}R</div><div class="d">după spread estimat</div></div>
+      <div class="card"><div class="l">Win rate</div><div class="v">${s.wr.toFixed(1)}%</div><div class="d">${s.wins} TP · ${s.losses} SL</div></div>
+      <div class="card ${s.pf>=1?'good':'bad'}"><div class="l">Profit factor</div><div class="v">${pf}</div><div class="d">profit brut / pierdere brută</div></div>
+      <div class="card ${s.maxDD<=5?'good':(s.maxDD<=10?'gold':'bad')}"><div class="l">Max drawdown</div><div class="v">${s.maxDD.toFixed(2)}%</div><div class="d">peak-to-trough</div></div>
     </div>
 
-    <div class="sec"><span>Equity curve</span><span>${money(cfg.startBalance)} → ${money(s.bal)}</span></div>
-    <div class="chart-wrap">${chartSvg(s.equity)}</div>
+    <div class="grid">
+      <div class="card good"><div class="l">Profit brut</div><div class="v">${money(s.gp)}</div><div class="d">doar trades pozitive</div></div>
+      <div class="card bad"><div class="l">Pierdere brută</div><div class="v">${money(s.gl)}</div><div class="d">doar trades negative</div></div>
+      <div class="card"><div class="l">Max win streak</div><div class="v">${s.streak.maxW}</div><div class="d">TP consecutive</div></div>
+      <div class="card"><div class="l">Max loss streak</div><div class="v">${s.streak.maxL}</div><div class="d">SL consecutive</div></div>
+    </div>
+
+    <div class="sec"><span>Equity curve</span><span>${s.n} trades</span></div>
+    <div class="chart">${chart(s.equity,s.ddCurve)}</div>
 
     <div class="sec">BUY vs SELL</div>
-    <div class="split">
-      <div class="panel">
-        <div class="kicker" style="color:var(--buy)">BUY</div>
-        <table class="tbl"><tbody>
-          <tr><td>Tranzacții</td><td>${buy.n}</td></tr>
-          <tr><td>Win rate</td><td>${buy.wr.toFixed(1)}%</td></tr>
-          <tr><td>P&amp;L</td><td>${money(buy.pnl)}</td></tr>
-          <tr><td>Profit factor</td><td>${buy.pf===Infinity?'∞':buy.pf.toFixed(2)}</td></tr>
-        </tbody></table>
-      </div>
-      <div class="panel">
-        <div class="kicker" style="color:var(--sell)">SELL</div>
-        <table class="tbl"><tbody>
-          <tr><td>Tranzacții</td><td>${sell.n}</td></tr>
-          <tr><td>Win rate</td><td>${sell.wr.toFixed(1)}%</td></tr>
-          <tr><td>P&amp;L</td><td>${money(sell.pnl)}</td></tr>
-          <tr><td>Profit factor</td><td>${sell.pf===Infinity?'∞':sell.pf.toFixed(2)}</td></tr>
-        </tbody></table>
-      </div>
+    <div class="two">
+      <div class="panel"><div class="kicker" style="color:var(--buy)">BUY</div><table class="tbl"><tbody>
+        <tr><td>Tranzacții</td><td>${buy.n}</td></tr><tr><td>Win rate</td><td>${buy.wr.toFixed(1)}%</td></tr>
+        <tr><td>Expectancy</td><td>${buy.exp>=0?'+':''}${buy.exp.toFixed(3)}R</td></tr>
+        <tr><td>P&L</td><td>${money(buy.pnl)}</td></tr><tr><td>Profit factor</td><td>${buy.pf===Infinity?'∞':buy.pf.toFixed(2)}</td></tr>
+      </tbody></table></div>
+      <div class="panel"><div class="kicker" style="color:var(--sell)">SELL</div><table class="tbl"><tbody>
+        <tr><td>Tranzacții</td><td>${sell.n}</td></tr><tr><td>Win rate</td><td>${sell.wr.toFixed(1)}%</td></tr>
+        <tr><td>Expectancy</td><td>${sell.exp>=0?'+':''}${sell.exp.toFixed(3)}R</td></tr>
+        <tr><td>P&L</td><td>${money(sell.pnl)}</td></tr><tr><td>Profit factor</td><td>${sell.pf===Infinity?'∞':sell.pf.toFixed(2)}</td></tr>
+      </tbody></table></div>
     </div>
 
-    <div class="sec"><span>Rezultate pe sesiuni</span><span>ora locală dispozitiv</span></div>
-    <div class="panel">
-      <table class="tbl">
-        <thead><tr><th>Sesiune</th><th>N</th><th>Win rate</th><th>P&amp;L</th><th>PF</th></tr></thead>
-        <tbody>
-          ${sessions.map(x=>`<tr><td>${x.name}</td><td>${x.n}</td><td>${x.wr.toFixed(1)}%</td><td>${money(x.pnl)}</td><td>${x.pf===Infinity?'∞':x.pf.toFixed(2)}</td></tr>`).join('')}
-        </tbody>
-      </table>
+    <div class="sec"><span>Sesiuni</span><span>clasificare în UTC</span></div>
+    <div class="panel" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Sesiune</th><th>N</th><th>WR</th><th>Exp.</th><th>P&L</th><th>PF</th></tr></thead><tbody>
+      ${sessions.map(x=>`<tr><td>${x.name}</td><td>${x.n}</td><td>${x.wr.toFixed(1)}%</td><td>${x.exp>=0?'+':''}${x.exp.toFixed(3)}R</td><td>${money(x.pnl)}</td><td>${x.pf===Infinity?'∞':x.pf.toFixed(2)}</td></tr>`).join('')}
+    </tbody></table></div>
+
+    <div class="sec"><span>Calitatea jurnalului</span><span>${totalAll} înregistrări</span></div>
+    <div class="grid">
+      <div class="card"><div class="l">Închise folosite</div><div class="v">${s.n}</div><div class="d">TP + SL după filtrare</div></div>
+      <div class="card gold"><div class="l">Deschise</div><div class="v">${open}</div><div class="d">nu intră în P&L</div></div>
+      <div class="card"><div class="l">Ambigue</div><div class="v">${amb}</div><div class="d">excluse din calcul</div></div>
+      <div class="card"><div class="l">Acoperire</div><div class="v">${totalAll?((s.n/totalAll)*100).toFixed(1):'0.0'}%</div><div class="d">din jurnalul total</div></div>
     </div>
 
-    <div class="sec">Ultimele tranzacții</div>
-    <div class="panel" style="overflow-x:auto">
-      <table class="tbl">
-        <thead><tr><th>Tip</th><th>Rezultat</th><th>Data</th><th>R net</th><th>P&amp;L</th><th>Sold</th></tr></thead>
-        <tbody>
-          ${latest.map(t=>`<tr>
-            <td><span class="tag ${t.signal}">${t.signal}</span></td>
-            <td><span class="tag ${t.outcome}">${t.outcome}</span></td>
-            <td>${fmtTime(t.candleTime)}</td>
-            <td>${t.netR>=0?'+':''}${t.netR.toFixed(3)}R</td>
-            <td>${t.pnl>=0?'+':''}${money(t.pnl)}</td>
-            <td>${money(t.after)}</td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
+    <div class="sec">Ultimele tranzacții închise</div>
+    <div class="panel" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Tip</th><th>Rezultat</th><th>Data</th><th>R net</th><th>Risc $</th><th>P&L</th><th>Sold</th></tr></thead><tbody>
+      ${latest.map(t=>`<tr><td><span class="tag ${t.signal}">${t.signal}</span></td><td><span class="tag ${t.outcome}">${t.outcome}</span></td><td>${fmt(t.candleTime)}</td><td>${t.netR>=0?'+':''}${t.netR.toFixed(3)}R</td><td>${money(t.risk)}</td><td>${t.pnl>=0?'+':''}${money(t.pnl)}</td><td>${money(t.after)}</td></tr>`).join('')}
+    </tbody></table></div>
   `;
 }
 async function load(){
   try{
-    const r=await fetch(API+'/api/journal');
-    if(!r.ok)throw new Error('Serverul jurnalului nu răspunde');
-    journal=await r.json();
+    const [jr,sig]=await Promise.all([
+      fetch(API+'/api/journal').then(r=>{if(!r.ok)throw new Error('Jurnal indisponibil');return r.json()}),
+      fetch(API+'/api/signal').then(r=>r.ok?r.json():null).catch(()=>null)
+    ]);
+    journal=jr;liveSignal=sig;
+    $('apiDot').className='dot ok';$('apiText').textContent='Date live conectate';
+    $('updated').textContent='actualizat '+new Date().toLocaleTimeString('ro-RO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
     render();
   }catch(err){
+    $('apiDot').className='dot bad';$('apiText').textContent='Eroare conexiune';
     $('content').innerHTML='<div class="err">'+err.message+'<br><br>Verifică serviciul de pe Render.</div>';
   }
 }
 $('applyBtn').addEventListener('click',render);
-$('resetBtn').addEventListener('click',()=>{
-  $('startBalance').value=defaults.startBalance;
-  $('riskPct').value=defaults.riskPct;
-  $('spread').value=defaults.spread;
-  render();
-});
-loadCfg();load();setInterval(load,120000);
+$('resetBtn').addEventListener('click',()=>{Object.keys(defaults).forEach(k=>{if($(k))$(k).value=defaults[k]});render()});
+loadCfg();load();setInterval(load,60000);
 </script>
 </body>
 </html>
