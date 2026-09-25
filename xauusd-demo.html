@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XAUUSD — Demo Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08080A;--panel:#141419;--panel2:#1B1B22;--line:#26262F;
+  --buy:#2979FF;--sell:#FF3B47;--win:#2ED47A;--wait:#FFC53D;
+  --gold:#E0B94A;--text:#F5F4F0;--dim:#777582;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:radial-gradient(ellipse at 50% 0%,#17171e 0%,var(--bg) 55%);
+  color:var(--text);font-family:'IBM Plex Mono',monospace;min-height:100vh;
+  padding:16px 12px 42px
+}
+.wrap{max-width:760px;margin:0 auto}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.kicker{font-size:10px;letter-spacing:.16em;color:var(--gold);text-transform:uppercase}
+h1{font-family:'Bebas Neue',sans-serif;font-size:38px;line-height:1;margin-top:4px}
+.sub{font-size:11px;color:var(--dim);margin-top:5px;line-height:1.5}
+.back{font-size:11px;color:var(--gold);text-decoration:none;border:1px solid #E0B94A44;padding:8px 10px;border-radius:8px;white-space:nowrap}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:10px}
+.cfg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.field label{display:block;font-size:8.5px;letter-spacing:.08em;color:var(--dim);text-transform:uppercase;margin-bottom:5px}
+.field input{width:100%;background:#0d0d11;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:10px 9px;font-family:inherit;font-size:12px}
+.actions{display:flex;gap:8px;margin-top:10px}
+button{border:0;border-radius:8px;padding:9px 12px;font-family:inherit;font-size:11px;font-weight:600;cursor:pointer}
+.primary{background:var(--gold);color:#0d0b05}
+.ghost{background:transparent;border:1px solid var(--line);color:var(--dim)}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 10px}
+.card .l{font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.card .v{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;margin-top:4px}
+.card .d{font-size:9px;color:var(--dim);margin-top:3px;line-height:1.4}
+.good .v{color:var(--win)}.bad .v{color:var(--sell)}.gold .v{color:var(--gold)}
+.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:10px;margin-bottom:10px}
+.balance{background:linear-gradient(145deg,#17171d,#111116);border:1px solid #34343e;border-radius:15px;padding:16px}
+.balance .l{font-size:9px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase}
+.balance .v{font-family:'Bebas Neue',sans-serif;font-size:52px;line-height:.95;margin-top:5px}
+.balance .p{font-size:12px;margin-top:7px}
+.balance .p.pos{color:var(--win)}.balance .p.neg{color:var(--sell)}
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.mini .l{font-size:8px;letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
+.mini .v{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;margin-top:4px}
+.sec{font-size:10px;letter-spacing:.13em;color:var(--dim);text-transform:uppercase;margin:16px 0 8px;display:flex;justify-content:space-between;gap:10px}
+.chart-wrap{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
+.chart-wrap svg{width:100%;height:220px;display:block;overflow:visible}
+.axis{font-size:9px;fill:#777582;font-family:'IBM Plex Mono',monospace}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tbl{width:100%;border-collapse:collapse;font-size:10px}
+.tbl th,.tbl td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl th{color:var(--dim);font-weight:500;font-size:8.5px;text-transform:uppercase;letter-spacing:.07em}
+.tag{display:inline-block;padding:3px 6px;border-radius:5px;font-size:9px;font-weight:600}
+.tag.BUY{background:#2979FF16;color:var(--buy)}.tag.SELL{background:#FF3B4716;color:var(--sell)}
+.tag.TP{background:#2ED47A16;color:var(--win)}.tag.SL{background:#FF3B4716;color:var(--sell)}
+.empty,.err{text-align:center;padding:34px 16px;border:1px dashed var(--line);border-radius:12px;color:var(--dim);font-size:12px;line-height:1.6}
+.err{color:var(--sell);border-color:#FF3B4744}
+.note{font-size:10px;color:var(--dim);line-height:1.6;margin-top:12px;padding:11px 12px;border-left:2px solid var(--gold);background:var(--panel);border-radius:8px}
+@media(max-width:640px){
+  .cfg,.grid4{grid-template-columns:1fr 1fr}
+  .hero,.split{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div>
+      <div class="kicker">Simulator virtual · XAUUSD</div>
+      <h1>Demo Dashboard</h1>
+      <div class="sub">Folosește istoricul real al semnalelor, dar calculează un sold complet virtual.</div>
+    </div>
+    <a class="back" href="index.html">← Semnale</a>
+  </div>
+
+  <div class="panel">
+    <div class="cfg">
+      <div class="field">
+        <label>Sold inițial ($)</label>
+        <input id="startBalance" type="number" min="10" step="10" value="1000">
+      </div>
+      <div class="field">
+        <label>Risc / tranzacție (%)</label>
+        <input id="riskPct" type="number" min="0.1" max="10" step="0.1" value="1">
+      </div>
+      <div class="field">
+        <label>Spread simulat ($/oz)</label>
+        <input id="spread" type="number" min="0" step="0.01" value="0.30">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="primary" id="applyBtn">Recalculează</button>
+      <button class="ghost" id="resetBtn">Valori implicite</button>
+    </div>
+  </div>
+
+  <div id="content"><div class="empty">Se încarcă...</div></div>
+
+  <div class="note">
+    Soldul este doar o simulare locală în browser. Nu trimite ordine către broker și nu folosește bani reali.
+    Costul spread-ului este aproximat în raport cu distanța până la SL, iar tranzacțiile ambigue/deschise nu intră în P&amp;L.
+  </div>
+</div>
+
+<script>
+const API='https://xauusd-signals-p8qp.onrender.com';
+const $=id=>document.getElementById(id);
+let journal=null;
+
+const defaults={startBalance:1000,riskPct:1,spread:0.30};
+function loadCfg(){
+  const raw=localStorage.getItem('xauusd_demo_cfg');
+  let c=defaults;
+  try{ if(raw) c={...defaults,...JSON.parse(raw)}; }catch(e){}
+  $('startBalance').value=c.startBalance;
+  $('riskPct').value=c.riskPct;
+  $('spread').value=c.spread;
+}
+function getCfg(){
+  return {
+    startBalance:Math.max(10,Number($('startBalance').value)||1000),
+    riskPct:Math.min(10,Math.max(.1,Number($('riskPct').value)||1)),
+    spread:Math.max(0,Number($('spread').value)||0)
+  };
+}
+function saveCfg(c){localStorage.setItem('xauusd_demo_cfg',JSON.stringify(c));}
+function money(v){return new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(v)+' $';}
+function pct(v){return (v>=0?'+':'')+v.toFixed(2)+'%';}
+function fmtTime(str){
+  if(!str)return '—';
+  const d=str.includes('T')?new Date(str):new Date(str.replace(' ','T')+'Z');
+  return d.toLocaleString('ro-RO',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function hourOf(str){
+  if(!str)return null;
+  const d=str.includes('T')?new Date(str):new Date(str.replace(' ','T')+'Z');
+  return d.getHours();
+}
+function sessionName(h){
+  if(h===null)return 'Necunoscut';
+  if(h<8)return 'Asia';
+  if(h<14)return 'Londra';
+  if(h<22)return 'New York';
+  return 'Târziu';
+}
+function baseR(e){
+  const entry=Number(e.entry), sl=Number(e.sl), spread=getCfg().spread;
+  const slDist=Math.abs(entry-sl);
+  const spreadR=slDist>0?spread/slDist:0;
+  return {slDist,spreadR};
+}
+function simulate(entries,cfg){
+  const closed=entries
+    .filter(e=>e.outcome==='TP'||e.outcome==='SL')
+    .slice().reverse();
+
+  let bal=cfg.startBalance, peak=bal, maxDD=0;
+  let grossProfit=0,grossLoss=0,wins=0,losses=0;
+  const trades=[],equity=[bal];
+  const byDir={BUY:[],SELL:[]};
+  const bySession={};
+
+  for(const e of closed){
+    const entry=Number(e.entry),sl=Number(e.sl);
+    const slDist=Math.abs(entry-sl);
+    const spreadR=slDist>0?cfg.spread/slDist:0;
+    const riskAmount=bal*(cfg.riskPct/100);
+    const grossR=e.outcome==='TP'?0.75:-1;
+    const netR=grossR-spreadR;
+    const pnl=riskAmount*netR;
+    const before=bal;
+    bal+=pnl;
+    if(pnl>=0){grossProfit+=pnl;wins++;}else{grossLoss+=Math.abs(pnl);losses++;}
+    peak=Math.max(peak,bal);
+    const dd=peak>0?(peak-bal)/peak*100:0;
+    maxDD=Math.max(maxDD,dd);
+    const h=hourOf(e.candleTime),session=sessionName(h);
+    const t={...e,before,after:bal,riskAmount,spreadR,netR,pnl,session};
+    trades.push(t);equity.push(bal);
+    if(byDir[e.signal])byDir[e.signal].push(t);
+    if(!bySession[session])bySession[session]=[];
+    bySession[session].push(t);
+  }
+  const n=closed.length;
+  const winRate=n?wins/n*100:0;
+  const pf=grossLoss>0?grossProfit/grossLoss:(grossProfit>0?Infinity:0);
+  const expectancy=n?trades.reduce((a,t)=>a+t.netR,0)/n:0;
+  return {bal,profit:bal-cfg.startBalance,returnPct:(bal/cfg.startBalance-1)*100,maxDD,grossProfit,grossLoss,wins,losses,n,winRate,pf,expectancy,trades,equity,byDir,bySession};
+}
+function statSet(arr){
+  const n=arr.length;
+  if(!n)return {n:0,wr:0,pnl:0,pf:0};
+  const wins=arr.filter(t=>t.pnl>=0),losses=arr.filter(t=>t.pnl<0);
+  const gp=wins.reduce((a,t)=>a+t.pnl,0),gl=Math.abs(losses.reduce((a,t)=>a+t.pnl,0));
+  return {n,wr:wins.length/n*100,pnl:arr.reduce((a,t)=>a+t.pnl,0),pf:gl>0?gp/gl:(gp>0?Infinity:0)};
+}
+function chartSvg(vals){
+  const w=700,h=220,pad=28;
+  if(vals.length<2)return '<div class="empty">Nu sunt suficiente tranzacții închise pentru grafic.</div>';
+  const min=Math.min(...vals),max=Math.max(...vals),span=Math.max(1,max-min);
+  const pts=vals.map((v,i)=>{
+    const x=pad+(i/(vals.length-1))*(w-pad*2);
+    const y=h-pad-((v-min)/span)*(h-pad*2);
+    return [x,y];
+  });
+  const poly=pts.map(p=>p.join(',')).join(' ');
+  const first=pts[0],last=pts[pts.length-1];
+  return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Curba soldului">
+    <line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#26262F"/>
+    <line x1="${pad}" y1="${pad}" x2="${pad}" y2="${h-pad}" stroke="#26262F"/>
+    <polyline points="${poly}" fill="none" stroke="#E0B94A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${first[0]}" cy="${first[1]}" r="3" fill="#777582"/>
+    <circle cx="${last[0]}" cy="${last[1]}" r="4" fill="#E0B94A"/>
+    <text x="${pad}" y="14" class="axis">${money(max)}</text>
+    <text x="${pad}" y="${h-5}" class="axis">${money(min)}</text>
+    <text x="${w-pad}" y="${h-5}" text-anchor="end" class="axis">${vals.length-1} tranzacții</text>
+  </svg>`;
+}
+function render(){
+  if(!journal)return;
+  const cfg=getCfg();saveCfg(cfg);
+  const s=simulate(journal.entries,cfg);
+  if(!s.n){
+    $('content').innerHTML='<div class="empty">Nu există încă tranzacții TP/SL suficiente pentru simulare.</div>';
+    return;
+  }
+  const retClass=s.profit>=0?'pos':'neg';
+  const pfTxt=s.pf===Infinity?'∞':s.pf.toFixed(2);
+  const buy=statSet(s.byDir.BUY),sell=statSet(s.byDir.SELL);
+  const sessions=Object.entries(s.bySession).map(([name,arr])=>({name,...statSet(arr)}));
+  const latest=[...s.trades].reverse().slice(0,12);
+
+  $('content').innerHTML=`
+    <div class="hero">
+      <div class="balance">
+        <div class="l">Sold demo actual</div>
+        <div class="v">${money(s.bal)}</div>
+        <div class="p ${retClass}">${s.profit>=0?'+':''}${money(s.profit)} · ${pct(s.returnPct)}</div>
+      </div>
+      <div class="summary">
+        <div class="mini"><div class="l">Tranzacții</div><div class="v">${s.n}</div></div>
+        <div class="mini"><div class="l">Win rate</div><div class="v">${s.winRate.toFixed(1)}%</div></div>
+        <div class="mini"><div class="l">Profit factor</div><div class="v">${pfTxt}</div></div>
+        <div class="mini"><div class="l">Max drawdown</div><div class="v">${s.maxDD.toFixed(2)}%</div></div>
+      </div>
+    </div>
+
+    <div class="grid4">
+      <div class="card ${s.expectancy>=0?'good':'bad'}"><div class="l">Expectancy net</div><div class="v">${s.expectancy>=0?'+':''}${s.expectancy.toFixed(3)}R</div><div class="d">include spreadul simulat</div></div>
+      <div class="card good"><div class="l">Profit brut</div><div class="v">${money(s.grossProfit)}</div><div class="d">${s.wins} TP</div></div>
+      <div class="card bad"><div class="l">Pierdere brută</div><div class="v">${money(s.grossLoss)}</div><div class="d">${s.losses} SL</div></div>
+      <div class="card gold"><div class="l">Risc curent</div><div class="v">${money(s.bal*(cfg.riskPct/100))}</div><div class="d">${cfg.riskPct}% din sold</div></div>
+    </div>
+
+    <div class="sec"><span>Equity curve</span><span>${money(cfg.startBalance)} → ${money(s.bal)}</span></div>
+    <div class="chart-wrap">${chartSvg(s.equity)}</div>
+
+    <div class="sec">BUY vs SELL</div>
+    <div class="split">
+      <div class="panel">
+        <div class="kicker" style="color:var(--buy)">BUY</div>
+        <table class="tbl"><tbody>
+          <tr><td>Tranzacții</td><td>${buy.n}</td></tr>
+          <tr><td>Win rate</td><td>${buy.wr.toFixed(1)}%</td></tr>
+          <tr><td>P&amp;L</td><td>${money(buy.pnl)}</td></tr>
+          <tr><td>Profit factor</td><td>${buy.pf===Infinity?'∞':buy.pf.toFixed(2)}</td></tr>
+        </tbody></table>
+      </div>
+      <div class="panel">
+        <div class="kicker" style="color:var(--sell)">SELL</div>
+        <table class="tbl"><tbody>
+          <tr><td>Tranzacții</td><td>${sell.n}</td></tr>
+          <tr><td>Win rate</td><td>${sell.wr.toFixed(1)}%</td></tr>
+          <tr><td>P&amp;L</td><td>${money(sell.pnl)}</td></tr>
+          <tr><td>Profit factor</td><td>${sell.pf===Infinity?'∞':sell.pf.toFixed(2)}</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <div class="sec"><span>Rezultate pe sesiuni</span><span>ora locală dispozitiv</span></div>
+    <div class="panel">
+      <table class="tbl">
+        <thead><tr><th>Sesiune</th><th>N</th><th>Win rate</th><th>P&amp;L</th><th>PF</th></tr></thead>
+        <tbody>
+          ${sessions.map(x=>`<tr><td>${x.name}</td><td>${x.n}</td><td>${x.wr.toFixed(1)}%</td><td>${money(x.pnl)}</td><td>${x.pf===Infinity?'∞':x.pf.toFixed(2)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sec">Ultimele tranzacții</div>
+    <div class="panel" style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Tip</th><th>Rezultat</th><th>Data</th><th>R net</th><th>P&amp;L</th><th>Sold</th></tr></thead>
+        <tbody>
+          ${latest.map(t=>`<tr>
+            <td><span class="tag ${t.signal}">${t.signal}</span></td>
+            <td><span class="tag ${t.outcome}">${t.outcome}</span></td>
+            <td>${fmtTime(t.candleTime)}</td>
+            <td>${t.netR>=0?'+':''}${t.netR.toFixed(3)}R</td>
+            <td>${t.pnl>=0?'+':''}${money(t.pnl)}</td>
+            <td>${money(t.after)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+async function load(){
+  try{
+    const r=await fetch(API+'/api/journal');
+    if(!r.ok)throw new Error('Serverul jurnalului nu răspunde');
+    journal=await r.json();
+    render();
+  }catch(err){
+    $('content').innerHTML='<div class="err">'+err.message+'<br><br>Verifică serviciul de pe Render.</div>';
+  }
+}
+$('applyBtn').addEventListener('click',render);
+$('resetBtn').addEventListener('click',()=>{
+  $('startBalance').value=defaults.startBalance;
+  $('riskPct').value=defaults.riskPct;
+  $('spread').value=defaults.spread;
+  render();
+});
+loadCfg();load();setInterval(load,120000);
+</script>
+</body>
+</html>
