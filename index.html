@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>XAUUSD — Semnale</title>
-<meta name="build-version" content="2026-09-26-1730-clean">
+<meta name="build-version" content="2026-09-26-news-status">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 <style>
@@ -93,6 +93,21 @@
   .tm .v{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;margin-top:3px;}
   .trade-wait-main{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--text);}
   .trade-wait-sub{font-size:9.5px;color:var(--dim);margin-top:4px;}
+
+  /* NEWS FILTER */
+  .news-state{border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin:0 0 13px;background:var(--panel);}
+  .news-state.safe{border-color:#2ED47A44;background:#2ED47A09;}
+  .news-state.block{border-color:#FF3B4755;background:#FF3B470b;}
+  .news-state.unavailable{border-color:#FFC53D44;background:#FFC53D0a;}
+  .news-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .news-badge{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;padding:5px 8px;border-radius:6px;}
+  .news-state.safe .news-badge{color:#2ED47A;background:#2ED47A14;}
+  .news-state.block .news-badge{color:var(--sell);background:#FF3B4714;}
+  .news-state.unavailable .news-badge{color:var(--wait);background:#FFC53D12;}
+  .news-title{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;text-align:right;}
+  .news-sub{font-size:9.5px;color:var(--dim);line-height:1.5;margin-top:6px;}
+  .news-state.block .news-sub strong{color:var(--sell);}
+  .news-state.safe .news-sub strong{color:#2ED47A;}
 
   /* Indicators */
   .sec{font-size:10px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;
@@ -194,7 +209,7 @@
 (function(){
   var API='https://xauusd-signals-p8qp.onrender.com';
   function byId(id){return document.getElementById(id);}
-  var ivMin=5, syncT=null, lastCandle=null, confirmed=null, journal=null;
+  var ivMin=5, syncT=null, lastCandle=null, confirmed=null, journal=null, newsStatus=null;
   var ACCOUNT_BALANCE=10000, RISK_PCT=0.75, XAU_CONTRACT_SIZE=100, LOT_STEP=0.01;
   var FILTER_ORDER=['no_strong_trend','adx','rsi_extreme','rsi','stretched','side_of_mean','near_e50','trend','cross','atr'];
   var FILTER_LABELS={
@@ -334,6 +349,40 @@
     '</div>';
   }
 
+  function formatEventTime(s){
+    if(!s)return '—';
+    var d=new Date(s);
+    if(isNaN(d.getTime()))return '—';
+    return d.toLocaleString('ro-RO',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  }
+
+  function newsStatusHtml(){
+    var n=newsStatus;
+    if(!n || n.available===false){
+      return '<div class="news-state unavailable">'+
+        '<div class="news-row"><span class="news-badge">NEWS ?</span><div class="news-title">Calendar indisponibil</div></div>'+
+        '<div class="news-sub">Filtrul de știri nu a putut fi verificat momentan.</div>'+
+      '</div>';
+    }
+
+    if(n.blocked){
+      var ev=n.event||{};
+      return '<div class="news-state block">'+
+        '<div class="news-row"><span class="news-badge">NEWS BLOCK</span><div class="news-title">'+esc(ev.title||'Eveniment macro important')+'</div></div>'+
+        '<div class="news-sub"><strong>Intrările noi sunt blocate.</strong> Eveniment: '+esc(formatEventTime(ev.timeUtc))+
+        ' · protecție '+esc(n.beforeMinutes)+' min înainte / '+esc(n.afterMinutes)+' min după.</div>'+
+      '</div>';
+    }
+
+    var next=n.nextEvent||null;
+    return '<div class="news-state safe">'+
+      '<div class="news-row"><span class="news-badge">NEWS SAFE</span><div class="news-title">Fără blocaj macro</div></div>'+
+      '<div class="news-sub">'+
+        (next?'Următorul eveniment monitorizat: <strong>'+esc(next.title)+'</strong> · '+esc(formatEventTime(next.timeUtc))+'.':'Nu există un eveniment macro monitorizat în fereastra apropiată.')+
+      '</div>'+
+    '</div>';
+  }
+
   function render(d){
     var c=confirmed||snap(d);
     var cw=c.signal==='ASTEAPTA'?'WAIT':c.signal;
@@ -362,6 +411,7 @@
         '<div class="pipcount">'+c.passed+'/'+c.total+' filtre confirmă</div>'+
         (differs?'<div class="hint">lumânarea în curs: <b class="'+lw+'">'+(lw==='WAIT'?'AȘTEAPTĂ':lw)+'</b> ('+d.passedCount+'/'+d.totalFilters+')</div>':'')+
       '</div>'+
+      newsStatusHtml()+
       activeTradeHtml(d)+
       levelsHtml+
       '<div class="sec">Indicatori</div>'+
@@ -395,12 +445,15 @@
     try{
       var responses=await Promise.all([
         fetch(API+'/api/signal',{cache:'no-store'}),
-        fetch(API+'/api/journal',{cache:'no-store'})
+        fetch(API+'/api/journal',{cache:'no-store'}),
+        fetch(API+'/api/news-status',{cache:'no-store'}).catch(function(){return null;})
       ]);
-      var res=responses[0], jrRes=responses[1];
+      var res=responses[0], jrRes=responses[1], newsRes=responses[2];
       if(!res.ok)throw new Error('Semnal indisponibil');
       var d=await res.json();
       if(jrRes.ok)journal=await jrRes.json();
+      if(newsRes && newsRes.ok)newsStatus=await newsRes.json();
+      else if(d.newsFilter)newsStatus=d.newsFilter;
 
       var m=parseInt(d.interval,10);
       if(!isNaN(m))ivMin=m;
