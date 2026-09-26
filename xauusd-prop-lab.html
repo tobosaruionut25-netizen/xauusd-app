@@ -39,6 +39,8 @@ button{border:0;border-radius:9px;padding:9px 12px;font:600 11px 'IBM Plex Mono'
 .muted{font-size:10px;color:var(--dim);line-height:1.5}
 .delta{font-size:12px;margin-top:8px}.pos{color:var(--win)}.neg{color:var(--sell)}
 .signal-pill{font:700 14px 'Space Grotesk',sans-serif;padding:6px 9px;border-radius:8px}.BUY{color:var(--buy)}.SELL{color:var(--sell)}.WAIT{color:var(--wait)}
+.entry-line{margin-top:12px;background:#0b0b0f;border:1px solid var(--line);border-radius:10px;padding:10px 11px;font:700 12px 'Space Grotesk',sans-serif;line-height:1.55;overflow-x:auto;white-space:nowrap}
+.entry-line .lot{color:var(--gold)}.entry-line .slx{color:var(--sell)}.entry-line .tpx{color:var(--win)}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 10px}
 .card .l{font-size:8px;letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
@@ -95,7 +97,7 @@ button{border:0;border-radius:9px;padding:9px 12px;font:600 11px 'IBM Plex Mono'
 
   <div id="content"><div class="empty">Se încarcă jurnalul...</div></div>
 
-  <div class="note"><b>Limitare importantă:</b> simularea de prop firm folosește P&amp;L realizat pe tranzacțiile închise. Regulile reale pot include floating P&amp;L, equity intraday, reset la o anumită oră și alte condiții. Pentru o simulare exactă tick-by-tick trebuie să salvăm și traseul prețului / equity-ul intraday în backend.</div>
+  <div class="note"><b>Lot sizing:</b> aplicația folosește o singură intrare, contract XAUUSD de 100 oz/lot și pas de 0,01 lot. Lotul este rotunjit în jos ca să nu depășească riscul setat.<br><br><b>Limitare importantă:</b> simularea de prop firm folosește P&amp;L realizat pe tranzacțiile închise. Regulile reale pot include floating P&amp;L, equity intraday, reset la o anumită oră și alte condiții. Pentru o simulare exactă tick-by-tick trebuie să salvăm și traseul prețului / equity-ul intraday în backend.</div>
 </div>
 
 <script>
@@ -103,6 +105,10 @@ const API='https://xauusd-signals-p8qp.onrender.com';
 const $=id=>document.getElementById(id);
 let journal=null,liveSignal=null;
 const defaults={startBalance:10000,riskPct:.75,spread:.30,dirFilter:'ALL',propPreset:'vanguard',dailyDD:4,maxDDRule:7,ddModel:'trailing_lock'};
+const XAU_CONTRACT_SIZE=100;
+const LOT_STEP=0.01;
+function floorLot(v){return Math.max(0,Math.floor((v+1e-10)/LOT_STEP)*LOT_STEP)}
+function lotForRisk(riskUsd,entry,sl){const d=Math.abs(Number(entry)-Number(sl));return d>0?floorLot(riskUsd/(d*XAU_CONTRACT_SIZE)):0}
 const PRESETS={
   vanguard:{name:'Upcomers Vanguard 10K',dailyDD:4,maxDDRule:7,ddModel:'trailing_lock',singleTrade:2,bestDay:20,validDays:6},
   ember:{name:'Upcomers Ember 10K',dailyDD:0,maxDDRule:4,ddModel:'trailing_lock',singleTrade:1.5,bestDay:20,validDays:5}
@@ -133,12 +139,15 @@ function simulate(entries,c,riskOverride=null){
   for(const e of closed){
     const entry=Number(e.entry),sl=Number(e.sl),dist=Math.abs(entry-sl);
     const spreadR=dist>0?c.spread/dist:0,grossR=e.outcome==='TP'?0.75:-1,netR=grossR-spreadR;
-    const risk=bal*riskPct/100,pnl=risk*netR,before=bal;bal+=pnl;
+    const targetRisk=bal*riskPct/100;
+    const lot=lotForRisk(targetRisk,entry,sl);
+    const risk=lot*dist*XAU_CONTRACT_SIZE;
+    const pnl=risk*netR,before=bal;bal+=pnl;
     if(e.outcome==='TP'){wins++;gp+=Math.max(0,pnl)}else{losses++;gl+=Math.abs(Math.min(0,pnl))}
     peak=Math.max(peak,bal);const dd=peak?(peak-bal)/peak*100:0;maxDD=Math.max(maxDD,dd);
     const d=dayKey(e.candleTime);if(!days[d])days[d]={date:d,start:before,pnl:0,trades:0,minEquity:before,maxEquity:before};
     days[d].pnl+=pnl;days[d].trades++;days[d].minEquity=Math.min(days[d].minEquity,bal);days[d].maxEquity=Math.max(days[d].maxEquity,bal);
-    trades.push({...e,before,after:bal,risk,pnl,netR,spreadR,day:d});equity.push(bal);ddCurve.push(dd);
+    trades.push({...e,before,after:bal,risk,targetRisk,lot,pnl,netR,spreadR,day:d});equity.push(bal);ddCurve.push(dd);
   }
   const n=trades.length,wr=n?wins/n*100:0,pf=gl?gp/gl:(gp?Infinity:0),exp=n?trades.reduce((x,t)=>x+t.netR,0)/n:0;
   return{bal,profit:bal-c.startBalance,ret:(bal/c.startBalance-1)*100,maxDD,gp,gl,wins,losses,n,wr,pf,exp,trades,equity,ddCurve,days:Object.values(days),riskPct};
@@ -191,17 +200,23 @@ function applyPreset(){
   const key=$('propPreset').value,p=PRESETS[key];if(!p)return;
   $('dailyDD').value=p.dailyDD;$('maxDDRule').value=p.maxDDRule;$('ddModel').value=p.ddModel;
 }
-function liveHtml(){
+function liveHtml(c,currentBalance){
   if(!liveSignal)return'<div class="hero-box"><div class="muted">Snapshot live indisponibil.</div></div>';
   const sig=liveSignal.signal==='ASTEAPTA'?'WAIT':liveSignal.signal,L=liveSignal.levels||{};
+  const targetRisk=currentBalance*c.riskPct/100;
+  const lot=(L.entry!==undefined&&L.stopLoss!==undefined)?lotForRisk(targetRisk,L.entry,L.stopLoss):0;
+  const slDist=(L.entry!==undefined&&L.stopLoss!==undefined)?Math.abs(Number(L.entry)-Number(L.stopLoss)):0;
+  const actualRisk=lot*slDist*XAU_CONTRACT_SIZE;
   return`<div class="hero-box">
     <div style="display:flex;justify-content:space-between;gap:10px"><div><div class="label">XAUUSD live</div><div class="big">${Number(liveSignal.price).toFixed(2)}</div></div><div class="signal-pill ${sig}">${sig}</div></div>
     <div class="muted">Filtre ${liveSignal.passedCount}/${liveSignal.totalFilters} · interval ${liveSignal.interval||'—'}</div>
+    <div class="entry-line"><span class="${sig}">${sig}</span> · <span class="lot">LOT ${lot.toFixed(2)}</span> · E <b>${L.entry??'—'}</b> · <span class="slx">SL ${L.stopLoss??'—'}</span> · <span class="tpx">TP ${L.takeProfit??'—'}</span></div>
+    <div class="muted" style="margin-top:7px">1 singură intrare · risc estimat ${money(actualRisk)} din ținta ${money(targetRisk)} · contract ${XAU_CONTRACT_SIZE} oz/lot</div>
     <div class="grid" style="margin-top:10px;margin-bottom:0">
       <div class="card"><div class="l">Entry</div><div class="v" style="font-size:15px">${L.entry??'—'}</div></div>
       <div class="card bad"><div class="l">SL</div><div class="v" style="font-size:15px">${L.stopLoss??'—'}</div></div>
       <div class="card good"><div class="l">TP</div><div class="v" style="font-size:15px">${L.takeProfit??'—'}</div></div>
-      <div class="card"><div class="l">R:R</div><div class="v" style="font-size:15px">${L.riskReward??'—'}</div></div>
+      <div class="card gold"><div class="l">Lot</div><div class="v" style="font-size:15px">${lot.toFixed(2)}</div></div>
     </div>
   </div>`}
 function render(){
@@ -214,7 +229,7 @@ function render(){
   const pf=s.pf===Infinity?'∞':s.pf.toFixed(2);
   $('content').innerHTML=`
     <div class="hero">
-      ${liveHtml()}
+      ${liveHtml(c,s.bal)}
       <div class="hero-box">
         <div class="label">Sold simulat</div><div class="big">${money(s.bal)}</div>
         <div class="delta ${s.profit>=0?'pos':'neg'}">${s.profit>=0?'+':''}${money(s.profit)} · ${pct(s.ret)}</div>
@@ -256,8 +271,8 @@ function render(){
     </tbody></table></div>
 
     <div class="sec">Ultimele tranzacții</div>
-    <div class="panel" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Tip</th><th>Rezultat</th><th>Data</th><th>R net</th><th>Risc $</th><th>P&L</th><th>Sold</th></tr></thead><tbody>
-      ${latest.map(t=>`<tr><td><span class="tag ${t.signal}">${t.signal}</span></td><td><span class="tag ${t.outcome}">${t.outcome}</span></td><td>${fmt(t.candleTime)}</td><td>${t.netR>=0?'+':''}${t.netR.toFixed(3)}R</td><td>${money(t.risk)}</td><td class="${t.pnl>=0?'pos':'neg'}">${t.pnl>=0?'+':''}${money(t.pnl)}</td><td>${money(t.after)}</td></tr>`).join('')}
+    <div class="panel" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Tip</th><th>Rezultat</th><th>Data</th><th>Lot</th><th>Entry</th><th>SL</th><th>TP</th><th>R net</th><th>Risc $</th><th>P&L</th><th>Sold</th></tr></thead><tbody>
+      ${latest.map(t=>`<tr><td><span class="tag ${t.signal}">${t.signal}</span></td><td><span class="tag ${t.outcome}">${t.outcome}</span></td><td>${fmt(t.candleTime)}</td><td><b>${t.lot.toFixed(2)}</b></td><td>${Number(t.entry).toFixed(2)}</td><td>${Number(t.sl).toFixed(2)}</td><td>${Number(t.tp).toFixed(2)}</td><td>${t.netR>=0?'+':''}${t.netR.toFixed(3)}R</td><td>${money(t.risk)}</td><td class="${t.pnl>=0?'pos':'neg'}">${t.pnl>=0?'+':''}${money(t.pnl)}</td><td>${money(t.after)}</td></tr>`).join('')}
     </tbody></table></div>
 
     <div class="note"><b>TP/SL Optimizer:</b> nu l-am activat încă fiindcă jurnalul actual spune doar dacă TP sau SL-ul original a fost atins. Pentru a testa corect 1:1, 1:1.5 sau 1:2 trebuie să salvăm MFE/MAE sau traseul prețului după fiecare intrare. Altfel am inventa rezultate.</div>
