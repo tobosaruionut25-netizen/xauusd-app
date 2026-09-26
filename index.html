@@ -278,7 +278,13 @@
     });
   }
 
+  function marketIsWeekend(){
+    var day=new Date().getUTCDay();
+    return day===0 || day===6;
+  }
+
   function marketDataFresh(d){
+    if(marketIsWeekend())return false;
     if(!d || !d.lastCandleTime)return false;
     var s=String(d.lastCandleTime);
     var ts=new Date(s.indexOf('T')>=0?s:s.replace(' ','T')+'Z').getTime();
@@ -291,7 +297,7 @@
     return '<div class="trade-state waiting">'+
       '<div class="trade-wait-main">În așteptarea următoarei intrări</div>'+
       '<div class="trade-wait-sub">'+
-        (marketClosed?'Piața este închisă sau datele live sunt oprite.':'Când apare un semnal nou, tranzacția activă va fi afișată aici.')+
+        (marketClosed?(marketIsWeekend()?'Piața XAUUSD este închisă în weekend.':'Piața este închisă sau datele live sunt oprite.'):'Când apare un semnal nou, tranzacția activă va fi afișată aici.')+
       '</div>'+
     '</div>';
   }
