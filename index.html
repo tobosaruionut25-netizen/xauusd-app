@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>XAUUSD — Semnale</title>
-<meta name="build-version" content="2026-09-26-1725">
+<meta name="build-version" content="2026-09-26-1730-clean">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 <style>
@@ -191,190 +191,210 @@
 </div>
 
 <script>
-const API='https://xauusd-signals-p8qp.onrender.com';
-const $=id=>document.getElementById(id);
-let ivMin=5, syncT=null, lastCandle=null, confirmed=null, journal=null;
-const ACCOUNT_BALANCE=10000, RISK_PCT=.75, XAU_CONTRACT_SIZE=100, LOT_STEP=.01;
-function floorLot(v){return Math.max(0,Math.floor((v+1e-10)/LOT_STEP)*LOT_STEP)}
-function calcLot(entry,sl){const dist=Math.abs(Number(entry)-Number(sl));const risk=ACCOUNT_BALANCE*RISK_PCT/100;return dist>0?floorLot(risk/(dist*XAU_CONTRACT_SIZE)):0}
-function fmtMoney(v){return (v>=0?'+':'')+Number(v).toFixed(2)+' USD'}
-function fmtTime(s){if(!s)return'—';const d=new Date(s.includes('T')?s:s.replace(' ','T')+'Z');return isNaN(d)?'—':d.toLocaleString('ro-RO',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
-function esc(s){const d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
-function msNext(){const ms=ivMin*60*1000;return ms-(Date.now()%ms);}
-const RING_LEN=2*Math.PI*18;
-function tick(){
-  const remain=msNext();
-  const total=ivMin*60*1000;
-  const r=Math.ceil(remain/1000),m=Math.floor(r/60),s=r%60;
-  $('cd').textContent=`${m}:${String(s).padStart(2,'0')}`;
+(function(){
+  var API='https://xauusd-signals-p8qp.onrender.com';
+  function byId(id){return document.getElementById(id);}
+  var ivMin=5, syncT=null, lastCandle=null, confirmed=null, journal=null;
+  var ACCOUNT_BALANCE=10000, RISK_PCT=0.75, XAU_CONTRACT_SIZE=100, LOT_STEP=0.01;
+  var FILTER_ORDER=['no_strong_trend','adx','rsi_extreme','rsi','stretched','side_of_mean','near_e50','trend','cross','atr'];
+  var FILTER_LABELS={
+    no_strong_trend:'Piață fără trend dominant',
+    adx:'Trend cu forță',
+    rsi_extreme:'RSI în zonă extremă',
+    rsi:'RSI nu e extrem',
+    stretched:'Preț întins față de EMA21',
+    side_of_mean:'Preț de partea corectă a mediei',
+    near_e50:'Aproape de EMA50',
+    trend:'EMA50 — trend general',
+    cross:'EMA9/EMA21 — crossover clar',
+    atr:'Volatilitate suficientă'
+  };
 
-  const fg=$('ringFg');
-  if(fg){
-    fg.style.strokeDasharray=RING_LEN;
-    fg.style.strokeDashoffset=RING_LEN*(1-remain/total);
+  function esc(v){
+    return String(v==null?'':v).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
   }
-  const ring=$('ring');
-  if(ring) ring.className='ring'+(remain<30000?' soon':'');
-  const pct=$('ringPct');
-  if(pct) pct.textContent=r<60?r:'';
-}
-function schedule(){clearTimeout(syncT);syncT=setTimeout(async()=>{await load();schedule();},msNext()+4000);}
-
-async function load(){
-  try{
-    const [res,jrRes]=await Promise.all([
-      fetch(`${API}/api/signal`),
-      fetch(`${API}/api/journal`)
-    ]);
-    if(!res.ok){const e=await res.json();throw new Error(e.details||e.error);}
-    const d=await res.json();
-    if(jrRes.ok) journal=await jrRes.json();
-
-    const m=parseInt(d.interval); if(!isNaN(m)) ivMin=m;
-    $('ivTxt').textContent='· '+d.interval;
-    if(lastCandle && d.lastCandleTime!==lastCandle) confirmed=snap(d);
-    if(!confirmed) confirmed=snap(d);
-    lastCandle=d.lastCandleTime;
-    render(d);
-  }catch(err){
-    $('main').innerHTML=`<div class="err">${esc(err.message)}<br><br>Verifică dacă serverul de pe Render rulează.</div>`;
+  function floorLot(v){return Math.max(0,Math.floor((v+1e-10)/LOT_STEP)*LOT_STEP);}
+  function calcLot(entry,sl){
+    var dist=Math.abs(Number(entry)-Number(sl));
+    var risk=ACCOUNT_BALANCE*RISK_PCT/100;
+    return dist>0?floorLot(risk/(dist*XAU_CONTRACT_SIZE)):0;
   }
-}
-function snap(d){return{signal:d.signal,price:d.price,passed:d.passedCount,total:d.totalFilters,dir:d.direction,levels:d.levels};}
-
-// Ordinea filtrelor dupa importanta conceptuala, cu valoarea curenta afisata
-const FILTER_ORDER = ['no_strong_trend','adx','rsi_extreme','rsi','stretched','side_of_mean','near_e50','trend','cross','atr'];
-const FILTER_LABELS = {
-  no_strong_trend:'Piață fără trend dominant',
-  adx:'Trend cu forță',
-  rsi_extreme:'RSI în zonă extremă',
-  rsi:'RSI nu e extrem',
-  stretched:'Preț întins față de EMA21',
-  side_of_mean:'Preț de partea corectă a mediei',
-  near_e50:'Aproape de EMA50',
-  trend:'EMA50 — trend general',
-  cross:'EMA9/EMA21 — crossover clar',
-  atr:'Volatilitate suficientă'
-};
-
-function filterValue(id,d){
-  const I=d.indicators;
-  switch(id){
-    case 'no_strong_trend': case 'adx': return `ADX ${I.adx}`;
-    case 'rsi_extreme': case 'rsi': return `RSI ${I.rsi}`;
-    case 'atr': return `ATR ${I.atr}`;
-    case 'stretched': return `EMA21 ${I.ema21}`;
-    case 'side_of_mean': return `preț ${d.price.toFixed(2)} · EMA21 ${I.ema21}`;
-    case 'near_e50': case 'trend': return `EMA50 ${I.ema50}`;
-    case 'cross': return `EMA9 ${I.ema9} · EMA21 ${I.ema21}`;
-    default: return null;
+  function fmtMoney(v){return (Number(v)>=0?'+':'')+Number(v).toFixed(2)+' USD';}
+  function fmtTime(s){
+    if(!s)return '—';
+    var d=new Date(String(s).indexOf('T')>=0?s:String(s).replace(' ','T')+'Z');
+    if(isNaN(d.getTime()))return '—';
+    return d.toLocaleString('ro-RO',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   }
-}
+  function msNext(){var ms=ivMin*60*1000;return ms-(Date.now()%ms);}
+  var RING_LEN=2*Math.PI*18;
 
-function orderFilters(d){
-  const list=[...d.filters];
-  list.sort((a,b)=>{
-    const ia=FILTER_ORDER.indexOf(a.id), ib=FILTER_ORDER.indexOf(b.id);
-    return (ia<0?99:ia)-(ib<0?99:ib);
-  });
-  return list.map(f=>({
-    ...f,
-    label: FILTER_LABELS[f.id] || f.name,
-    val: filterValue(f.id,d)
-  }));
-}
-
-function activeTradeHtml(d){
-  const entries=journal?.entries||[];
-  const t=entries.find(e=>e.outcome==='OPEN');
-  if(!t){
-    return `<div class="trade-state waiting">
-      <div class="trade-wait-main">În așteptarea următoarei intrări</div>
-      <div class="trade-wait-sub">Când apare un semnal nou, tranzacția activă va fi afișată aici.</div>
-    </div>`;
+  function tick(){
+    var remain=msNext(), total=ivMin*60*1000;
+    var r=Math.ceil(remain/1000), m=Math.floor(r/60), sec=r%60;
+    if(byId('cd'))byId('cd').textContent=m+':'+String(sec).padStart(2,'0');
+    var fg=byId('ringFg');
+    if(fg){
+      fg.style.strokeDasharray=RING_LEN;
+      fg.style.strokeDashoffset=RING_LEN*(1-remain/total);
+    }
+    var ring=byId('ring');
+    if(ring)ring.className='ring'+(remain<30000?' soon':'');
+    var pct=byId('ringPct');
+    if(pct)pct.textContent=r<60?r:'';
   }
 
-  const lot=calcLot(t.entry,t.sl);
-  const side=t.signal==='SELL'?'SELL':'BUY';
-  const price=Number(d.price);
-  const entry=Number(t.entry), sl=Number(t.sl), tp=Number(t.tp);
-  const floating=(side==='BUY'?price-entry:entry-price)*XAU_CONTRACT_SIZE*lot;
-  const risk=Math.abs(entry-sl)*XAU_CONTRACT_SIZE*lot;
+  function schedule(){
+    clearTimeout(syncT);
+    syncT=setTimeout(function(){load().then(schedule);},msNext()+4000);
+  }
 
-  return `<div class="trade-state active ${side}">
-    <div class="trade-head">
-      <div class="trade-title">Tranzacție activă</div>
-      <span class="open-badge">OPEN</span>
-    </div>
-    <div class="trade-line">
-      <span class="${side}">${side}</span> · <span class="lot">LOT ${lot.toFixed(2)}</span> · E <b>${entry.toFixed(2)}</b> · <span class="slx">SL ${sl.toFixed(2)}</span> · <span class="tpx">TP ${tp.toFixed(2)}</span>
-    </div>
-    <div class="trade-meta">
-      <div class="tm"><div class="k">Preț live</div><div class="v">${price.toFixed(2)}</div></div>
-      <div class="tm"><div class="k">P&amp;L flotant</div><div class="v" style="color:${floating>=0?'#2ED47A':'var(--sell)'}">${fmtMoney(floating)}</div></div>
-      <div class="tm"><div class="k">Risc la SL</div><div class="v">~${risk.toFixed(2)} $</div></div>
-    </div>
-    <div class="trade-wait-sub" style="margin-top:8px">Deschisă: ${fmtTime(t.candleTime)} · aceeași poziție rămâne aici până la TP sau SL.</div>
-  </div>`;
-}
+  function snap(d){
+    return {signal:d.signal,price:d.price,passed:d.passedCount,total:d.totalFilters,dir:d.direction,levels:d.levels};
+  }
 
-function render(d){
-  const c=confirmed;
-  const cw=c.signal==='ASTEAPTA'?'WAIT':c.signal;
-  const lw=d.signal==='ASTEAPTA'?'WAIT':d.signal;
-  document.body.className=cw;
+  function filterValue(id,d){
+    var I=d.indicators||{};
+    if(id==='no_strong_trend'||id==='adx')return 'ADX '+I.adx;
+    if(id==='rsi_extreme'||id==='rsi')return 'RSI '+I.rsi;
+    if(id==='atr')return 'ATR '+I.atr;
+    if(id==='stretched')return 'EMA21 '+I.ema21;
+    if(id==='side_of_mean')return 'preț '+Number(d.price).toFixed(2)+' · EMA21 '+I.ema21;
+    if(id==='near_e50'||id==='trend')return 'EMA50 '+I.ema50;
+    if(id==='cross')return 'EMA9 '+I.ema9+' · EMA21 '+I.ema21;
+    return null;
+  }
 
-  const pips=Array.from({length:c.total},(_,i)=>
-    `<div class="pip ${i<c.passed?'on':''} ${cw}"></div>`).join('');
-  const differs=lw!==cw;
+  function orderFilters(d){
+    var list=(d.filters||[]).slice();
+    list.sort(function(a,b){
+      var ia=FILTER_ORDER.indexOf(a.id), ib=FILTER_ORDER.indexOf(b.id);
+      return (ia<0?99:ia)-(ib<0?99:ib);
+    });
+    return list.map(function(f){
+      return {id:f.id,name:f.name,pass:f.pass,label:FILTER_LABELS[f.id]||f.name,val:filterValue(f.id,d)};
+    });
+  }
 
-  const L=d.levels;
-  const levelsHtml = L ? `
-    <div class="levels">
-      <div class="lv entry"><div class="ll">Intrare</div><div class="lvv">${L.entry}</div><div class="ld">preț curent</div></div>
-      <div class="lv sl"><div class="ll">Stop Loss</div><div class="lvv">${L.stopLoss}</div><div class="ld">−${L.slPips}</div></div>
-      <div class="lv tp"><div class="ll">Take Profit</div><div class="lvv">${L.takeProfit}</div><div class="ld">+${L.tpPips}</div></div>
-    </div>
-    <div class="rr">risc/recompensă ${L.riskReward} · calculat din ATR ${d.indicators.atr}</div>
-  ` : '';
+  function activeTradeHtml(d){
+    var entries=(journal&&journal.entries)||[];
+    var t=null;
+    for(var i=0;i<entries.length;i++){if(entries[i].outcome==='OPEN'){t=entries[i];break;}}
+    if(!t){
+      return '<div class="trade-state waiting">'+
+        '<div class="trade-wait-main">În așteptarea următoarei intrări</div>'+
+        '<div class="trade-wait-sub">Când apare un semnal nou, tranzacția activă va fi afișată aici.</div>'+
+      '</div>';
+    }
 
-  $('main').innerHTML=`
-    <div class="signal ${cw}">
-      <div class="word ${cw}">${cw==='WAIT'?'AȘTEAPTĂ':cw}</div>
-      <div class="price">${d.price.toFixed(2)}</div>
-      <div class="pips">${pips}</div>
-      <div class="pipcount">${c.passed}/${c.total} filtre confirmă</div>
-      ${differs?`<div class="hint">lumânarea în curs: <b class="${lw}">${lw==='WAIT'?'AȘTEAPTĂ':lw}</b> (${d.passedCount}/${d.totalFilters})</div>`:''}
-    </div>
-    ${activeTradeHtml(d)}
-    ${levelsHtml}
-    <div class="sec">Indicatori</div>
-    <div class="ind-grid">
-      <div class="ind"><div class="il">EMA9</div><div class="iv">${d.indicators.ema9}</div></div>
-      <div class="ind"><div class="il">EMA21</div><div class="iv">${d.indicators.ema21}</div></div>
-      <div class="ind"><div class="il">EMA50</div><div class="iv">${d.indicators.ema50}</div></div>
-      <div class="ind"><div class="il">RSI</div><div class="iv">${d.indicators.rsi}</div></div>
-      <div class="ind"><div class="il">ATR</div><div class="iv">${d.indicators.atr}</div></div>
-      <div class="ind"><div class="il">ADX</div><div class="iv">${d.indicators.adx}</div></div>
-    </div>
-    <div class="sec">Filtre <span>${d.passedCount}/${d.totalFilters}</span></div>
-    <div class="f-hint">În ordinea importanței · toate trebuie confirmate</div>
-    ${orderFilters(d).map((f,i)=>`
-      <div class="f-row ${f.pass?'pass':''}">
-        <div class="f-left">
-          <span class="f-num">${i+1}</span>
-          <span class="f-txt">
-            <span class="f-name">${esc(f.label)}</span>
-            ${f.val!==null?`<span class="f-val">${f.val}</span>`:''}
-          </span>
-        </div>
-        <span class="fs ${f.pass?'ok':'no'}">${f.pass?'OK':'—'}</span>
-      </div>`).join('')}
-  `;
-}
+    var lot=calcLot(t.entry,t.sl);
+    var side=t.signal==='SELL'?'SELL':'BUY';
+    var price=Number(d.price), entry=Number(t.entry), sl=Number(t.sl), tp=Number(t.tp);
+    var floating=(side==='BUY'?price-entry:entry-price)*XAU_CONTRACT_SIZE*lot;
+    var risk=Math.abs(entry-sl)*XAU_CONTRACT_SIZE*lot;
+    var pnlColor=floating>=0?'#2ED47A':'var(--sell)';
 
-setInterval(tick,1000); tick();
-load().then(schedule);
+    return '<div class="trade-state active '+side+'">'+
+      '<div class="trade-head"><div class="trade-title">Tranzacție activă</div><span class="open-badge">OPEN</span></div>'+
+      '<div class="trade-line">'+
+        '<span class="'+side+'">'+side+'</span> · <span class="lot">LOT '+lot.toFixed(2)+'</span> · E <b>'+entry.toFixed(2)+'</b> · '+
+        '<span class="slx">SL '+sl.toFixed(2)+'</span> · <span class="tpx">TP '+tp.toFixed(2)+'</span>'+
+      '</div>'+
+      '<div class="trade-meta">'+
+        '<div class="tm"><div class="k">Preț live</div><div class="v">'+price.toFixed(2)+'</div></div>'+
+        '<div class="tm"><div class="k">P&amp;L flotant</div><div class="v" style="color:'+pnlColor+'">'+fmtMoney(floating)+'</div></div>'+
+        '<div class="tm"><div class="k">Risc la SL</div><div class="v">~'+risk.toFixed(2)+' USD</div></div>'+
+      '</div>'+
+      '<div class="trade-wait-sub" style="margin-top:8px">Deschisă: '+fmtTime(t.candleTime)+' · rămâne aici până la TP sau SL.</div>'+
+    '</div>';
+  }
+
+  function render(d){
+    var c=confirmed||snap(d);
+    var cw=c.signal==='ASTEAPTA'?'WAIT':c.signal;
+    var lw=d.signal==='ASTEAPTA'?'WAIT':d.signal;
+    document.body.className=cw;
+
+    var pips='';
+    for(var i=0;i<c.total;i++){
+      pips+='<div class="pip '+(i<c.passed?'on ':'')+cw+'"></div>';
+    }
+    var differs=lw!==cw;
+    var L=d.levels||{};
+    var levelsHtml=
+      '<div class="levels">'+
+        '<div class="lv entry"><div class="ll">Intrare</div><div class="lvv">'+esc(L.entry)+'</div><div class="ld">preț curent</div></div>'+
+        '<div class="lv sl"><div class="ll">Stop Loss</div><div class="lvv">'+esc(L.stopLoss)+'</div><div class="ld">−'+esc(L.slPips)+'</div></div>'+
+        '<div class="lv tp"><div class="ll">Take Profit</div><div class="lvv">'+esc(L.takeProfit)+'</div><div class="ld">+'+esc(L.tpPips)+'</div></div>'+
+      '</div>'+
+      '<div class="rr">risc/recompensă '+esc(L.riskReward)+' · calculat din ATR '+esc((d.indicators||{}).atr)+'</div>';
+
+    var html=
+      '<div class="signal '+cw+'">'+
+        '<div class="word '+cw+'">'+(cw==='WAIT'?'AȘTEAPTĂ':cw)+'</div>'+
+        '<div class="price">'+Number(d.price).toFixed(2)+'</div>'+
+        '<div class="pips">'+pips+'</div>'+
+        '<div class="pipcount">'+c.passed+'/'+c.total+' filtre confirmă</div>'+
+        (differs?'<div class="hint">lumânarea în curs: <b class="'+lw+'">'+(lw==='WAIT'?'AȘTEAPTĂ':lw)+'</b> ('+d.passedCount+'/'+d.totalFilters+')</div>':'')+
+      '</div>'+
+      activeTradeHtml(d)+
+      levelsHtml+
+      '<div class="sec">Indicatori</div>'+
+      '<div class="ind-grid">'+
+        '<div class="ind"><div class="il">EMA9</div><div class="iv">'+esc(d.indicators.ema9)+'</div></div>'+
+        '<div class="ind"><div class="il">EMA21</div><div class="iv">'+esc(d.indicators.ema21)+'</div></div>'+
+        '<div class="ind"><div class="il">EMA50</div><div class="iv">'+esc(d.indicators.ema50)+'</div></div>'+
+        '<div class="ind"><div class="il">RSI</div><div class="iv">'+esc(d.indicators.rsi)+'</div></div>'+
+        '<div class="ind"><div class="il">ATR</div><div class="iv">'+esc(d.indicators.atr)+'</div></div>'+
+        '<div class="ind"><div class="il">ADX</div><div class="iv">'+esc(d.indicators.adx)+'</div></div>'+
+      '</div>'+
+      '<div class="sec">Filtre <span>'+d.passedCount+'/'+d.totalFilters+'</span></div>'+
+      '<div class="f-hint">În ordinea importanței · toate trebuie confirmate</div>';
+
+    var filters=orderFilters(d);
+    for(var j=0;j<filters.length;j++){
+      var f=filters[j];
+      html+='<div class="f-row '+(f.pass?'pass':'')+'">'+
+        '<div class="f-left"><span class="f-num">'+(j+1)+'</span><span class="f-txt">'+
+        '<span class="f-name">'+esc(f.label)+'</span>'+
+        (f.val!==null?'<span class="f-val">'+esc(f.val)+'</span>':'')+
+        '</span></div>'+
+        '<span class="fs '+(f.pass?'ok':'no')+'">'+(f.pass?'OK':'—')+'</span>'+
+      '</div>';
+    }
+
+    byId('main').innerHTML=html;
+  }
+
+  async function load(){
+    try{
+      var responses=await Promise.all([
+        fetch(API+'/api/signal',{cache:'no-store'}),
+        fetch(API+'/api/journal',{cache:'no-store'})
+      ]);
+      var res=responses[0], jrRes=responses[1];
+      if(!res.ok)throw new Error('Semnal indisponibil');
+      var d=await res.json();
+      if(jrRes.ok)journal=await jrRes.json();
+
+      var m=parseInt(d.interval,10);
+      if(!isNaN(m))ivMin=m;
+      if(byId('ivTxt'))byId('ivTxt').textContent='· '+d.interval;
+      if(lastCandle && d.lastCandleTime!==lastCandle)confirmed=snap(d);
+      if(!confirmed)confirmed=snap(d);
+      lastCandle=d.lastCandleTime;
+      render(d);
+    }catch(err){
+      byId('main').innerHTML='<div class="err">'+esc(err.message)+'<br><br>Verifică dacă serverul de pe Render rulează.</div>';
+    }
+  }
+
+  setInterval(tick,1000);
+  tick();
+  load().then(schedule);
+})();
 </script>
 </body>
 </html>
