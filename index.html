@@ -278,16 +278,33 @@
     });
   }
 
+  function marketDataFresh(d){
+    if(!d || !d.lastCandleTime)return false;
+    var s=String(d.lastCandleTime);
+    var ts=new Date(s.indexOf('T')>=0?s:s.replace(' ','T')+'Z').getTime();
+    if(!isFinite(ts))return false;
+    var maxAge=Math.max(15,ivMin*3)*60*1000;
+    return (Date.now()-ts)<=maxAge;
+  }
+
+  function waitingTradeHtml(marketClosed){
+    return '<div class="trade-state waiting">'+
+      '<div class="trade-wait-main">În așteptarea următoarei intrări</div>'+
+      '<div class="trade-wait-sub">'+
+        (marketClosed?'Piața este închisă sau datele live sunt oprite.':'Când apare un semnal nou, tranzacția activă va fi afișată aici.')+
+      '</div>'+
+    '</div>';
+  }
+
   function activeTradeHtml(d){
+    var fresh=marketDataFresh(d);
     var entries=(journal&&journal.entries)||[];
     var t=null;
     for(var i=0;i<entries.length;i++){if(entries[i].outcome==='OPEN'){t=entries[i];break;}}
-    if(!t){
-      return '<div class="trade-state waiting">'+
-        '<div class="trade-wait-main">În așteptarea următoarei intrări</div>'+
-        '<div class="trade-wait-sub">Când apare un semnal nou, tranzacția activă va fi afișată aici.</div>'+
-      '</div>';
-    }
+
+    // Nu afișăm ca activă o poziție veche atunci când piața nu mai livrează lumânări noi.
+    if(!fresh)return waitingTradeHtml(true);
+    if(!t)return waitingTradeHtml(false);
 
     var lot=calcLot(t.entry,t.sl);
     var side=t.signal==='SELL'?'SELL':'BUY';
